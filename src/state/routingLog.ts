@@ -31,6 +31,9 @@ type Listener = () => void;
 
 const listeners = new Set<Listener>();
 
+/** Storage is browser-only; Node (tests, SSR) must never touch it. */
+const hasBrowserStorage = typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+
 function isRow(value: unknown): value is RoutingLogRow {
   if (!value || typeof value !== "object") return false;
   const row = value as Record<string, unknown>;
@@ -39,7 +42,7 @@ function isRow(value: unknown): value is RoutingLogRow {
 
 function load(): RoutingLogRow[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
@@ -49,11 +52,12 @@ function load(): RoutingLogRow[] {
   }
 }
 
-let rows: RoutingLogRow[] = typeof localStorage === "undefined" ? [] : load();
+let rows: RoutingLogRow[] = hasBrowserStorage ? load() : [];
 
 function persist(): void {
+  if (!hasBrowserStorage) return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
   } catch {
     // Storage full or blocked: the in-memory log still works for this session.
   }
@@ -139,4 +143,42 @@ export function summariseLog(log: RoutingLogRow[]): {
         ? Math.round(withLatency.reduce((sum, r) => sum + r.latencyMs, 0) / withLatency.length)
         : null,
   };
+}
+
+/**
+ * Machine-readable export of the ledger.
+ *
+ * This is the artefact a judge can inspect after the video: every decision, the
+ * mode it requested, the source the SDK reported, and whether they agreed.
+ */
+export function exportRoutingLogJSON(log: RoutingLogRow[]): string {
+  const summary = summariseLog(log);
+  return JSON.stringify(
+    {
+      app: "Sahayogi",
+      ledger: "routing decisions recorded from Firebase AI Logic hybrid inference",
+      exportedAt: new Date().toISOString(),
+      schema: {
+        predictedMode: "InferenceMode requested by the routing policy",
+        actual: "InferenceSource reported by the SDK after the request",
+        agreed: "predicted on-device state equals the reported source",
+      },
+      summary,
+      rows: log,
+    },
+    null,
+    2,
+  );
+}
+
+export function downloadRoutingLog(log: RoutingLogRow[]): void {
+  const blob = new Blob([exportRoutingLogJSON(log)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `sahayogi-routing-log-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.json`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
 }

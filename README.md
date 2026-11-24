@@ -120,11 +120,15 @@ src/
   store/chatStore.ts      Firestore reads/writes, offline queue
   state/AppContext.tsx    connection, device, policy, mode
   state/routingLog.ts     prediction-vs-reality ledger
-  components/             RouteBadge, TransparencyPanel, DevicePreflight, …
+  components/             RouteBadge, TransparencyPanel, DevicePreflight, ErrorBoundary, …
   pages/                  Ask, Quiz, History, Settings, Setup
-tests/                    64 unit tests over the pure layer
+tests/                    72 unit tests over the pure layer
+docs/browser-support.md   measured capability matrix (incl. Brave, Chromium)
+SUBMISSION.md             paste-ready Devpost pack + judging-criteria evidence map
 firestore.rules           owner-only access, default deny
 ```
+
+Documentation: [browser support](docs/browser-support.md) · [submission pack](SUBMISSION.md)
 
 ---
 
@@ -208,7 +212,7 @@ This is documented rather than hidden: the app's failure mode when the weights a
 ## 7. Tests
 
 ```bash
-npm test        # 64 tests, ~0.2s, no network, no browser, no Firebase project
+npm test        # 72 tests, ~0.2s, no network, no browser, no Firebase project
 npm run build   # tsc -b + vite build
 ```
 
@@ -219,6 +223,7 @@ The suite covers the parts that can be wrong in ways users feel:
 - **`detectScript`** — Devanagari, Romanised Nepali (allowed: it is Latin script), Arabic, kana, Han, Hangul, mixed strings, and the 2000-character sampling window (12 cases).
 - **`parseFlashcards` / `splitMarkdownSections`** — fences, prose around JSON, key variants, brackets inside strings, unterminated JSON (15 cases).
 - **`badgeForMode` / `badgeForPreview`** — agreement, fallback, reverse disagreement, and the distinction between a prediction and an observation (8 cases).
+- **`summariseLog` / `exportRoutingLogJSON`** — ledger aggregates, latency averaging that ignores rows with no timing, and a self-describing export that keeps disagreements visible (8 cases).
 
 What is *not* covered by automated tests, and is verified manually: a real cloud call through App Check, and a real on-device call. Both are listed in the app's own Settings page under "How to verify this yourself".
 
@@ -228,6 +233,10 @@ What is *not* covered by automated tests, and is verified manually: a real cloud
 
 - Light prompts **do not leave the device**. That is the product claim, and `inferenceSource === "on_device"` is the evidence trail.
 - All cloud requests are attested by **App Check**.
+- **Offline is real after a reload, not just while the tab is open.** A service worker precaches the app shell
+  (14 entries, ~1.2 MB), so a cold start with no network still boots the interface. Verified by cutting the
+  network at the protocol level (CDP `Network.emulateNetworkConditions` with `offline: true`) and reloading:
+  the app rendered a complete screen. Firebase traffic is cross-origin and is **never** cached by the worker.
 - **Firestore persistent local cache** means history renders with no network, and writes made offline are durably queued. Each queued message is stored with `syncedOffline: true` so the UI can show "written offline, queued to sync".
 - Rules are owner-only with a default-deny catch-all: `request.auth.uid == uid`.
 - Anonymous auth is used so there is no sign-up friction; the uid is real, so the rules are real.
@@ -237,7 +246,7 @@ What is *not* covered by automated tests, and is verified manually: a real cloud
 ## 9. Demo script (≤ 3 min)
 
 1. **Hook (15 s)** — a student, metered data, unreliable connection.
-2. **On-device (30 s)** — ask a short English question → `⚡ on-device`. Then disconnect the network and ask again. Still answers.
+2. **On-device (30 s)** — ask a short English question → `⚡ on-device`. Then disconnect the network, **reload the page**, and ask again. Still answers: the shell is precached and the model is local.
 3. **Proof (10 s)** — open **Transparency — how routing works**; show rows where the prediction was `prefer device` and the SDK reported `on_device`.
 4. **Language (20 s)** — ask the same thing in Nepali. The preview turns `☁️ cloud · this language is cloud-only`; the answer comes from the cloud with the reason attached.
 5. **Heavy (20 s)** — paste notes, generate a 10-question exam → cloud.
@@ -259,7 +268,10 @@ Recorded on: Chrome 158 on Windows/macOS (on-device) — see §6 for why the Lin
 - **Nepali cannot run on-device** in this Chrome build: the local model accepts `en, ja, es, de, fr`. The router routes it to the cloud deliberately and says why. When Chrome adds Nepali to `expectedInputs`, the policy is one array entry away from using it.
 - Devanagari detection is script-based, not language-based. That is a deliberate choice: guessing language from script is wrong more often than the SDK's own negotiation.
 - Flashcard JSON is parsed leniently rather than constrained, because on-device structured output is not reliable across model versions. The raw answer is shown if parsing fails instead of discarding it.
-- The bundle ships Firebase whole (~300 kB gzipped); route-level code splitting is the obvious next optimisation.
+- The bundle ships Firebase whole (~300 kB gzipped) and is precached by the service worker, so the first
+  load downloads ~1.2 MB once. Route-level code splitting is the obvious next optimisation.
+- The service worker caches the shell only. A browser that has never loaded the app online cannot start
+  it offline — that is a web-platform limit, not a design choice.
 
 ---
 

@@ -11,7 +11,7 @@ import { ModeToggle } from "../components/ModeToggle";
 import { TransparencyPanel } from "../components/TransparencyPanel";
 import { Button, Chip, Panel, SectionHeading, Stat } from "../components/ui";
 import { useApp } from "../state/appContext";
-import { clearRoutingLog, summariseLog, useRoutingLog } from "../state/routingLog";
+import { clearRoutingLog, downloadRoutingLog, summariseLog, useRoutingLog } from "../state/routingLog";
 
 export function SettingsPage() {
   const { userMode, setUserMode, policy, policySource, policyIssues, diagnostics, uid, deviceAvailability } = useApp();
@@ -102,11 +102,18 @@ export function SettingsPage() {
           <li>Open Transparency above: predicted and actual are recorded per row, with latency.</li>
           <li>Change routing_policy in Remote Config, reload, and watch the threshold behaviour change without a deploy.</li>
         </ol>
-        <div className="mt-4 flex gap-2">
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button variant="secondary" onClick={() => downloadRoutingLog(log)} disabled={log.length === 0}>
+            Export routing log (JSON)
+          </Button>
           <Button variant="ghost" onClick={clearRoutingLog} disabled={log.length === 0}>
             Clear routing log ({log.length})
           </Button>
         </div>
+        <p className="mt-2 text-[11.5px] leading-relaxed text-muted">
+          The export is the evidence file: one row per decision with the mode the policy requested, the
+          source the SDK reported, latency, and whether the two agreed. Nothing in it is synthesised.
+        </p>
       </Panel>
     </div>
   );

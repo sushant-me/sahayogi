@@ -254,7 +254,7 @@ export function AskPage() {
             />
           </div>
         ) : (
-          <div className="flex-1 space-y-4">
+          <div className="flex-1 space-y-4" role="log" aria-live="polite" aria-relevant="additions text" aria-label="Conversation">
             {turns.map((turn) => (
               <ChatMessage
                 key={turn.id}
