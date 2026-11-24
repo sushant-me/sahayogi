@@ -50,6 +50,9 @@ you are asked to do anything.
 
 ![Quiz exam: ten generated questions with an answer key, badged cloud 81133 ms](docs/screenshots/quiz-exam.png)
 
+Firestore rules name every path the app uses rather than wildcarding a user's subtree, and messages are
+append-only so a stored answer's routing evidence cannot be rewritten after the fact.
+
 A real exported ledger is committed at [docs/evidence/](docs/evidence/) — one row per decision with the
 requested mode, the SDK's reported source, the model that answered, and whether the two agreed.
 

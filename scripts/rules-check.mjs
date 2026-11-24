@@ -13,6 +13,9 @@
  *   3. a user cannot read another user's chat                   → denied
  *   4. a user cannot write another user's chat                  → denied
  *   5. an unauthenticated request cannot read                   → denied
+ *   6. a message can be appended but not edited or deleted       → create allowed, update/delete denied
+ *   7. an unnamed subcollection under the user is closed         → denied
+ *   8. the self-check probe path works, and a non-owner is denied
  *
  * Exits non-zero if any expectation is not met.
  */
@@ -86,7 +89,48 @@ async function main() {
   response = await fetch(`${BASE}/users/${victim.uid}/chats/rulescheck?key=${API_KEY}`);
   record("unauthenticated: read", "deny", response.status, await response.json().catch(() => ({})));
 
-  // 6 — cleaning up after yourself works
+  // 6 — messages are append-only
+  const messagePath = `${BASE}/users/${attacker.uid}/chats/rulescheck/messages/m1?key=${API_KEY}`;
+  response = await fetch(messagePath, {
+    method: "PATCH",
+    headers: auth(attacker.idToken),
+    body: JSON.stringify({ fields: { text: field("an answer"), role: field("model") } }),
+  });
+  record("own message: append", "allow", response.status, await response.json().catch(() => ({})));
+
+  response = await fetch(messagePath, {
+    method: "PATCH",
+    headers: auth(attacker.idToken),
+    body: JSON.stringify({ fields: { text: field("rewritten evidence"), role: field("model") } }),
+  });
+  record("own message: edit", "deny", response.status, await response.json().catch(() => ({})));
+
+  response = await fetch(messagePath, { method: "DELETE", headers: auth(attacker.idToken) });
+  record("own message: delete", "deny", response.status, response.status === 200 ? {} : {});
+
+  // 7 — an unnamed subcollection is closed, not inherited
+  response = await fetch(`${BASE}/users/${attacker.uid}/private/thing?key=${API_KEY}`, {
+    method: "PATCH",
+    headers: auth(attacker.idToken),
+    body: JSON.stringify({ fields: { note: field("should not be allowed") } }),
+  });
+  record("unnamed subcollection: write", "deny", response.status, await response.json().catch(() => ({})));
+
+  // 8 — the self-check probe path is usable by its owner and closed to others
+  const checkPath = `${BASE}/users/${attacker.uid}/selfChecks/c1?key=${API_KEY}`;
+  response = await fetch(checkPath, {
+    method: "PATCH",
+    headers: auth(attacker.idToken),
+    body: JSON.stringify({ fields: { at: field("now") } }),
+  });
+  record("self-check probe path: write", "allow", response.status, await response.json().catch(() => ({})));
+
+  response = await fetch(`${BASE}/users/${victim.uid}/selfChecks/c1?key=${API_KEY}`, {
+    headers: auth(attacker.idToken),
+  });
+  record("another user's self-check: read", "deny", response.status, await response.json().catch(() => ({})));
+
+  // 9 — cleaning up after yourself works
   response = await fetch(ownPath, { method: "DELETE", headers: auth(attacker.idToken) });
   record("own document: delete", "allow", response.status, response.status === 200 ? {} : {});
 }
