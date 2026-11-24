@@ -316,3 +316,27 @@ describe("AskPage when history cannot be saved", () => {
     );
   });
 });
+
+describe("AskPage automatic retry", () => {
+  it("logs one ledger row for a prompt, even when the retry fails too", async () => {
+    vi.useFakeTimers();
+    mockedLog.mockClear();
+    mockedRun.mockRejectedValue({ code: "QUOTA_EXCEEDED", message: "quota exhausted", hint: "wait" });
+
+    renderAsk();
+    fireEvent.change(screen.getByLabelText("Your question"), { target: { value: "Will this be logged twice?" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
+
+    // the automatic retry is scheduled 20s out
+    await vi.advanceTimersByTimeAsync(21_000);
+
+    // two attempts were made...
+    expect(mockedRun).toHaveBeenCalledTimes(2);
+    // ...but one decision is recorded, because an attempt that is about to be retried
+    // is not yet an outcome.
+    expect(mockedLog).toHaveBeenCalledTimes(1);
+    expect(mockedLog.mock.calls[0][0]).toMatchObject({ actual: null, error: "QUOTA_EXCEEDED" });
+
+    vi.useRealTimers();
+  });
+});
