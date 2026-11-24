@@ -13,7 +13,7 @@ placeholders once the URL/video/repo exist. Everything else is final.
 | **Tagline** | A study assistant that tells you where every answer ran — Gemini Nano on-device, cloud when it must. |
 | **Platform selected** | Web (Chrome) |
 | **Hosted URL** | https://hackthon-dcdf7.web.app |
-| **Repo** | `<<GITHUB_URL>>` (public, Apache-2.0 visible in About) — not pushed yet |
+| **Repo** | https://github.com/sushant-me/sahayogi (public, Apache-2.0 detected in the About panel) |
 | **Video** | `<<YOUTUBE_URL>>` (public, ≤ 3 min, English) |
 
 ---
@@ -185,7 +185,7 @@ Rule for the recording: **nothing mocked, nothing staged**. If a shot needs a re
 
 ## Pre-submit checklist (from the official requirements)
 
-- [ ] Repo **public**, **open-source license visible in the About panel** (Apache-2.0)
+- [x] Repo **public**, **open-source license visible in the About panel** (Apache-2.0) — verified via the GitHub API
 - [ ] `firebase/ai` **imported and called at runtime** — `src/firebase/ai.ts`, `src/ai/models.ts`
 - [ ] **App Check** enabled; production domain registered (debug token acceptable, used only in dev)
 - [ ] **Hosted URL** live and free to access

@@ -22,7 +22,7 @@ The on-device half needs Chrome with the Gemini Nano weights installed; without 
 `no device model` and routes to the cloud rather than pretending. See [docs/browser-support.md](docs/browser-support.md).
 
 
-**Live:** https://hackthon-dcdf7.web.app · **Project:** `hackthon-dcdf7`
+**Live:** https://hackthon-dcdf7.web.app · **Repo:** https://github.com/sushant-me/sahayogi · **Project:** `hackthon-dcdf7`
 
 ![Ask page: a real cloud answer badged "cloud 4992 ms", with the routing rail beside it](docs/screenshots/ask-cloud.png)
 
