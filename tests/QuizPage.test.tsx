@@ -202,3 +202,28 @@ describe("QuizPage when the free tier is rate-limiting", () => {
     vi.useRealTimers();
   });
 });
+
+describe("QuizPage when the page is left mid-retry", () => {
+  it("does not fire an inference nobody can see", async () => {
+    vi.useFakeTimers();
+    const mockedRun = vi.mocked(runInference);
+    mockedRun.mockReset();
+    mockedRun.mockRejectedValue({ code: "QUOTA_EXCEEDED", message: "quota", hint: "wait" });
+
+    const { unmount } = render(<QuizPage />);
+    fireEvent.change(screen.getByLabelText(/study notes/i), {
+      target: { value: "Mitochondria are the site of aerobic respiration in eukaryotic cells." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /flashcards/i }));
+
+    await vi.waitFor(() => expect(screen.getByText(/retrying automatically/i)).toBeTruthy());
+    expect(mockedRun).toHaveBeenCalledTimes(1);
+
+    unmount();
+    await vi.advanceTimersByTimeAsync(120_000);
+
+    // the armed retry must have been cancelled with the component
+    expect(mockedRun).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
+});

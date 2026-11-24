@@ -93,6 +93,15 @@ export function QuizPage() {
   const retryTimerRef = useRef<number | null>(null);
   const [retrying, setRetrying] = useState<{ attempt: number; task: TaskKind } | null>(null);
 
+  // Leaving the page must not leave a retry armed: it would fire an inference with no UI,
+  // spending a scarce free-tier request on an answer nobody can see.
+  useEffect(
+    () => () => {
+      if (retryTimerRef.current !== null) window.clearTimeout(retryTimerRef.current);
+    },
+    [],
+  );
+
   const cancelRetry = useCallback(() => {
     if (retryTimerRef.current !== null) window.clearTimeout(retryTimerRef.current);
     retryTimerRef.current = null;
