@@ -61,6 +61,9 @@ afterEach(() => cleanup());
 
 beforeEach(() => {
   mockedRun.mockReset();
+  // The page now restores a notes draft from localStorage; each test starts clean so
+  // one test's typed notes cannot enable the buttons in another.
+  window.localStorage.clear();
 });
 
 describe("QuizPage", () => {

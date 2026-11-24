@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc -b",
     "verify": "npm run lint && tsc -b && vitest run && vite build",
-    "preflight": "node scripts/preflight.mjs"
+    "preflight": "node scripts/preflight.mjs",
+    "deploy": "npm run verify && npx --yes firebase-tools@15 deploy --only hosting --project hackthon-dcdf7 --non-interactive"
   },
   "dependencies": {
     "firebase": "^13.4.0",

@@ -22,6 +22,7 @@ import { BentoCard, BentoGrid, BentoMetric, BentoRow } from "../components/bento
 import { Button, Chip } from "../components/ui";
 import { useApp } from "../state/appContext";
 import { logRoute, summariseLog, useRoutingLog } from "../state/routingLog";
+import { clearDraft, useDraft } from "../state/useDraft";
 import { getPersistence } from "../store/persistence";
 
 interface Turn {
@@ -90,7 +91,7 @@ export function AskPage() {
   } = useApp();
 
   const [turns, setTurns] = useState<Turn[]>([]);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useDraft("ask-input");
   const [sending, setSending] = useState(false);
   const [streamingText, setStreamingText] = useState("");
   const [elapsedMs, setElapsedMs] = useState(0);
@@ -177,6 +178,7 @@ export function AskPage() {
 
     setSending(true);
     setInput("");
+    clearDraft("ask-input");
     setStreamingText("");
     setElapsedMs(0);
     setTurns((current) => [

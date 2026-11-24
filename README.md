@@ -259,6 +259,7 @@ This is documented rather than hidden: the app's failure mode when the weights a
 ```bash
 npm test        # the whole suite, ~2s, no network, no browser, no Firebase project
 npm run verify  # lint + types + tests + production build, in that order
+npm run deploy  # runs verify first, so a red suite cannot reach Hosting
 npm run preflight # probe the real project: AI Logic, auth, App Check, on-device
 npm run build   # tsc -b + vite build
 ```

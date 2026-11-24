@@ -19,6 +19,7 @@ import type { Flashcard } from "../ai/prompts";
 import { RouteBadge } from "../components/RouteBadge";
 import { BentoCard, BentoGrid } from "../components/bento";
 import { Button, Chip } from "../components/ui";
+import { useDraft } from "../state/useDraft";
 import { useApp } from "../state/appContext";
 import { logRoute } from "../state/routingLog";
 
@@ -33,7 +34,7 @@ interface Meta {
 
 export function QuizPage() {
   const { policy, deviceAvailability, online, userMode, pushToast } = useApp();
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useDraft("quiz-notes");
   const [busy, setBusy] = useState<TaskKind | null>(null);
   const [cards, setCards] = useState<Flashcard[] | null>(null);
   const [rawFallback, setRawFallback] = useState<string | null>(null);
