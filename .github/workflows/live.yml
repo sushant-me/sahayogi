@@ -1,0 +1,40 @@
+name: Live checks
+
+# The CI workflow proves the code is sound. This one proves the *deployment* is, which is a
+# different question: a green build says nothing about whether the hosted app still renders,
+# authenticates, or passes its own self-check.
+#
+# Deliberately not wired to push: a deployment check that fails because a Google API had a bad
+# minute would block honest work. It runs nightly and on demand.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 06:00 UTC daily — after the free-tier quota window has rolled over.
+    - cron: "0 6 * * *"
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Drives the deployed app in headless Chrome: shell, all four sections, and the
+      # in-app self-check. No quota is spent here, so it is safe to run on a schedule.
+      - name: Smoke test the deployed app
+        run: npm run smoke
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+
+      - name: Structural accessibility audit
+        run: npm run a11y
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
