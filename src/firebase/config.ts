@@ -19,6 +19,7 @@ import {
 } from "firebase/firestore";
 import { getAuth, signInAnonymously, onAuthStateChanged, type Auth, type User } from "firebase/auth";
 import {
+  getToken,
   initializeAppCheck,
   ReCaptchaEnterpriseProvider,
   ReCaptchaV3Provider,
@@ -134,6 +135,20 @@ export function getFirebaseAuth(): Auth {
  * production. In local dev a debug token keeps the loop fast; the README records
  * exactly which mode was used for the recorded demo.
  */
+/**
+ * Fetch an App Check token eagerly.
+ *
+ * The first inference pays for the attestation exchange otherwise, which reads as a slow
+ * app rather than a cold token. Failure is harmless: the request path retries it.
+ */
+export function warmAppCheckToken(): void {
+  const appCheck = initAppCheck();
+  if (!appCheck) return;
+  void getToken(appCheck, true /* forceRefresh */).catch(() => {
+    /* the inference path reports an attestation failure properly */
+  });
+}
+
 export function initAppCheck(): AppCheck | null {
   if (cachedAppCheck) return cachedAppCheck;
   if (!appCheckConfig.siteKey && !appCheckConfig.debug) return null;

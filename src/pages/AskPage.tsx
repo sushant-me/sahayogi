@@ -91,6 +91,7 @@ export function AskPage() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [streamingText, setStreamingText] = useState("");
+  const [elapsedMs, setElapsedMs] = useState(0);
   const chatIdRef = useRef<string | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const routingLog = useRoutingLog();
@@ -113,6 +114,16 @@ export function AskPage() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
   }, [turns, streamingText]);
+
+  // A free-tier answer can legitimately take half a minute, and until the first token
+  // arrives the UI has nothing to show. A visible counter is the difference between
+  // "working" and "hung".
+  useEffect(() => {
+    if (!sending) return;
+    const startedAt = performance.now();
+    const timer = window.setInterval(() => setElapsedMs(performance.now() - startedAt), 250);
+    return () => window.clearInterval(timer);
+  }, [sending]);
 
   async function persist(userText: string, result: {
     text: string;
@@ -150,6 +161,14 @@ export function AskPage() {
     }
   }
 
+  /** Start a fresh conversation; the previous one is already saved in History. */
+  function startNewChat() {
+    chatIdRef.current = null;
+    setTurns([]);
+    setInput("");
+    setStreamingText("");
+  }
+
   async function send(raw: string) {
     const text = raw.trim();
     if (!text || sending) return;
@@ -157,6 +176,7 @@ export function AskPage() {
     setSending(true);
     setInput("");
     setStreamingText("");
+    setElapsedMs(0);
     setTurns((current) => [
       ...current,
       { id: nextId(), role: "user", text, predictedMode: null, actual: null, reason: "none", latencyMs: null },
@@ -245,7 +265,19 @@ export function AskPage() {
           label="Conversation"
           flush
           accent="neutral"
-          meta={<ModeToggle value={userMode} onChange={setUserMode} disabled={sending} />}
+          meta={
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                onClick={startNewChat}
+                disabled={sending || turns.length === 0}
+                title="Start a fresh conversation (the saved one stays in History)"
+              >
+                New chat
+              </Button>
+              <ModeToggle value={userMode} onChange={setUserMode} disabled={sending} />
+            </div>
+          }
         >
           <div className="flex min-h-[430px] flex-col">
             <div className="flex-1 px-4 pb-2" role="log" aria-live="polite" aria-relevant="additions text" aria-label="Conversation">
@@ -282,7 +314,10 @@ export function AskPage() {
                   {sending ? (
                     <ChatMessage
                       role="model"
-                      text={streamingText || "Thinking…"}
+                      text={
+                        streamingText ||
+                        (elapsedMs > 1200 ? `Thinking… ${Math.floor(elapsedMs / 1000)}s` : "Thinking…")
+                      }
                       predictedMode={preview?.inferenceMode ?? null}
                       actual={null}
                       reason={preview?.reason ?? "none"}
@@ -309,7 +344,7 @@ export function AskPage() {
                   value={input}
                   onChange={(event) => setInput(event.target.value)}
                   onKeyDown={(event) => {
-                    if (event.key === "Enter" && !event.shiftKey) {
+                    if (event.key === "Enter" && (!event.shiftKey || event.ctrlKey || event.metaKey)) {
                       event.preventDefault();
                       void send(input);
                     }
@@ -324,7 +359,8 @@ export function AskPage() {
                 </Button>
               </div>
               <p className="mt-2 text-[10.5px] text-muted">
-                Enter sends · Shift+Enter adds a line · nothing leaves this device when the answer runs on-device
+                Enter sends · Shift+Enter adds a line · ⌘/Ctrl+Enter also sends · nothing leaves this device when the
+                answer runs on-device
               </p>
             </div>
           </div>

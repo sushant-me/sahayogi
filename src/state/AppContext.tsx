@@ -16,7 +16,7 @@ import {
   configDiagnostics,
   ensureAnonymousUser,
   fetchRoutingPolicyRaw,
-  initAppCheck,
+  warmAppCheckToken,
   isFirebaseConfigured,
 } from "../firebase/config";
 import {
@@ -94,7 +94,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Attestation first: it is required by AI Logic and its token exchange is
       // the slowest part of the first request.
       try {
-        initAppCheck();
+        // Warm the attestation token so the first question is not paying for the
+        // exchange; a failure here is harmless because the request path retries it.
+        warmAppCheckToken();
       } catch (error) {
         console.warn("[sahayogi] App Check init failed:", error);
       }
