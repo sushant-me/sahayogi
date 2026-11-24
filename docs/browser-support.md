@@ -42,3 +42,15 @@ await LanguageModel.availability()          // "available" | "downloadable" | "d
 
 A manifest of the on-device model can be inspected at `chrome://components`
 ("Optimization Guide On Device Model") and `chrome://on-device-internals`.
+
+## Degradations that are verified, not assumed
+
+Each of these was tested by removing the capability before first paint and then using the deployed app.
+
+| Capability missing | What happens |
+|---|---|
+| `localStorage` refuses access (throwing getter) | App renders and is usable; drafts and the routing log simply do not persist. Before this was fixed the page did not render at all. |
+| `navigator.serviceWorker` absent | App renders normally, all four sections work, no errors — only the offline capability is lost. |
+| `indexedDB` absent | App renders; cloud Firestore writes still work (verified by the self-check's write → read → delete round-trip); Remote Config falls back to the built-in policy and says so. |
+| Prompt API absent (e.g. Brave) | Cloud-only, stated in the header chip rather than guessed at. |
+| Prompt API present but weights unreachable (Linux) | The device card reports the stalled download after ~60 s instead of waiting forever. |
