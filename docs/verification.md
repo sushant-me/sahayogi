@@ -90,6 +90,9 @@ per-decision latency and the device string, and enables `Export routing log (JSO
 | Item | State |
 |---|---|
 | Hosting | **live at https://hackthon-dcdf7.web.app** — 200, correct `<title>`, `/sw.js` served |
+| Public repository | **https://github.com/sushant-me/sahayogi** — public, GitHub reports `licenseInfo: Apache-2.0`, homepage and topics set |
+| Composition CI | both runs `success` on the first push (32 s); badge served 200 |
+| No secrets published | zero history hits for API keys, OAuth tokens, the App Check debug token, the reCAPTCHA site key, or private keys; `dist/`, `.env.local` and `node_modules/` untracked |
 | Web app registration | `1:508887070917:web:0f5b513056d407471c98ac` (created during this build) |
 | Cloud APIs enabled via the authorized CLI | `firestore`, `identitytoolkit`, `securetoken`, `firebasevertexai`, `firebaseappcheck`, `generativelanguage`, `recaptchaenterprise` |
 | App Check debug token | registered as `sahayogi-dev`, stored in `.env.local` (gitignored) |
