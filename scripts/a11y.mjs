@@ -151,6 +151,37 @@ try {
       await sleep(4500);
       await evaluate(`[...document.querySelectorAll('nav[aria-label="Sections"] button')].find((b) => b.textContent.trim() === ${JSON.stringify(section)})?.click()`);
       await sleep(2000);
+
+      // Audit an *interacted* state, not just first paint: controls that only appear once the
+      // user acts (the route preview, the enabled generators) were never covered before.
+      if (section === "Ask") {
+        await evaluate(`(() => {
+          const ta = document.querySelector("textarea");
+          if (!ta) return;
+          const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set;
+          setter.call(ta, "Explain Ohm's law in one sentence.");
+          ta.dispatchEvent(new Event("input", { bubbles: true }));
+        })()`);
+      }
+      if (section === "Quiz") {
+        await evaluate(`(() => {
+          const sample = [...document.querySelectorAll("button")].find((b) => /use a sample/i.test(b.textContent || ""));
+          sample?.click();
+        })()`);
+      }
+      if (section === "Ask" || section === "Quiz") await sleep(900);
+
+      // A self-validating audit: prove the interaction changed the page, otherwise the extra
+      // state was never audited and this run would be reassuring for no reason.
+      let interactionProblem = null;
+      if (section === "Ask") {
+        const shown = await evaluate(`/PREDICTED/.test(document.body.innerText)`);
+        if (!shown) interactionProblem = "typing did not reveal the route preview";
+      }
+      if (section === "Quiz") {
+        const filled = await evaluate(`(document.querySelector("textarea")?.value || "").length > 50`);
+        if (!filled) interactionProblem = "the sample button did not fill the notes";
+      }
       let result = await evaluate(AUDIT);
       if (!result || result.h1.length !== 1) {
         // one retry: sections are judged on a slow connection too, and a single missed
@@ -172,6 +203,7 @@ try {
         result.unlabeledFields.length ? `unlabelled fields: ${result.unlabeledFields.join(", ")}` : null,
         result.overflow > 0 ? `horizontal overflow ${result.overflow}px` : null,
         result.lang ? null : "no <html lang>",
+        interactionProblem,
       ].filter(Boolean);
       const titleOk = result.title.startsWith(section);
       if (!titleOk) problems.push(`title is "${result.title}"`);
