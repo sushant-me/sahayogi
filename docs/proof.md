@@ -39,6 +39,7 @@ https://hackthon-dcdf7.web.app.
 | Chats and messages persist and come back | ask, then History | chat listed with **2 messages** and the routing badge intact |
 | Deleting really deletes | delete a chat, reload | gone, and still gone after a reload |
 | Anonymous auth gives a real uid without sign-up | self-check | `pass · Anonymous auth · uid …` |
+| It runs in a different engine, not just Chromium | open it in Firefox | verified on Firefox 159: identical layout, `no Prompt API` chip, and the self-check passes everything including App Check attestation and Firestore |
 | The app degrades when Firebase is unconfigured | provide no `.env.local` | the Setup screen names which variables are missing and shows a ready-to-paste `.env.local` block with console steps, instead of a broken or blank app |
 
 ## Offline and the shell
