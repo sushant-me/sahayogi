@@ -401,6 +401,15 @@ export function AskPage() {
                         router says so rather than failing silently.
                       </p>
                     </div>
+                    {/*
+                      Judges arrive from a public link, often on a shared free tier. Saying so before they
+                      ask turns a slow answer into an expected one — and the alternative, saying nothing,
+                      makes a throttled window look like a broken app.
+                    */}
+                    <p className="mx-auto mt-3 max-w-md text-[11px] leading-relaxed text-muted">
+                      Public demo on a shared free tier: a cloud answer can take up to a minute, and the app
+                      retries by itself before it gives up. The on-device path needs no quota at all.
+                    </p>
                   </div>
                 </div>
               ) : (
