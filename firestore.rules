@@ -1,0 +1,27 @@
+rules_version = '2';
+
+// Sahayogi security rules.
+//
+// Anonymous Auth gives every visitor a real uid, and these rules make that uid the
+// only key to its own data. Nothing here is readable without an authenticated
+// owner, and the catch-all deny at the bottom means a new collection added later is
+// closed by default rather than silently public.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // chats + their messages live under the owner's uid
+    match /users/{uid}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // effective routing policy snapshot per user
+    match /settings/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // everything else is closed
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

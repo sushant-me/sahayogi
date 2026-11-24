@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-bg text-ink antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  ::selection {
+    @apply bg-accent/30;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-accent/60 ring-offset-2 ring-offset-bg;
+  }
+}
+
+@layer components {
+  .panel {
+    @apply rounded-xl border border-line bg-panel;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-1 rounded-lg px-3 py-1.5 text-[12.5px] font-medium transition-colors;
+    @apply disabled:cursor-not-allowed disabled:opacity-45;
+  }
+
+  .btn-primary {
+    @apply bg-accent text-bg hover:bg-accent/90;
+  }
+
+  .btn-secondary {
+    @apply border border-line bg-panel-2 text-ink hover:border-line/70 hover:bg-panel-2/70;
+  }
+
+  .btn-ghost {
+    @apply text-muted hover:bg-panel-2 hover:text-ink;
+  }
+
+  .btn-danger {
+    @apply border border-danger/40 bg-danger/10 text-danger hover:bg-danger/15;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium;
+  }
+
+  .chip-neutral {
+    @apply border-line bg-panel-2 text-muted;
+  }
+
+  .chip-device {
+    @apply border-device/35 bg-device/10 text-device;
+  }
+
+  .chip-cloud {
+    @apply border-cloud/35 bg-cloud/10 text-cloud;
+  }
+
+  .chip-warn {
+    @apply border-warn/40 bg-warn/10 text-warn;
+  }
+
+  .chip-danger {
+    @apply border-danger/40 bg-danger/10 text-danger;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11.5px];
+  }
+
+  .badge-device {
+    @apply border-device/35 bg-device/10 text-device;
+  }
+
+  .badge-cloud {
+    @apply border-cloud/35 bg-cloud/10 text-cloud;
+  }
+
+  .badge-warn {
+    @apply border-warn/45 bg-warn/10 text-warn;
+  }
+
+  /* A prediction is not evidence: dashed, muted, never the same weight as a result. */
+  .badge-preview {
+    @apply border-dashed border-line text-muted;
+  }
+
+  .field {
+    @apply w-full rounded-lg border border-line bg-panel-2/60 px-3 py-2 text-[13px] text-ink placeholder:text-muted/70;
+    @apply focus:border-accent/50 focus:outline-none;
+  }
+}
