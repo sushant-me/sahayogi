@@ -45,9 +45,13 @@ below is something that has actually bitten this project during development.
    problems fail the run; a quota failure prints a WARN with the reason instead of pretending the app is
    broken. Then follow up with Settings → **Test one answer** for the in-app version.
    - `pass` → you are clear.
-   - `QUOTA_EXCEEDED` → the free tier is metered per minute *and* per model. Wait for the
-     window to reset (a minute clears short bursts; a daily cap needs longer), or enable
-     billing on `hackthon-dcdf7`. No code change fixes this.
+   - `QUOTA_EXCEEDED` → the free tier is metered per minute *and* per model. Short bursts clear
+     within a minute — but be aware this project hit a limit on 2026-11-24 that persisted for over
+     an hour of retries across all three model ids in the chain, which looks like a daily cap rather
+     than a rate spike. Waiting a minute did **not** clear that one. Either wait for the daily window
+     (midnight Pacific is the usual reset for the Gemini API free tier — worth confirming in the
+     console rather than trusting this line), enable billing on `hackthon-dcdf7`, or record the
+     [no-quota demo](#if-the-cloud-quota-is-exhausted) below. No code change fixes this.
    - `MODEL_OVERLOADED` / `500 high demand` → transient. Try again in a few minutes.
 3. **Turn off notifications**, close other tabs that share the profile, plug in power.
 4. Have the **ledger export** already saved once, so you know where the file lands.

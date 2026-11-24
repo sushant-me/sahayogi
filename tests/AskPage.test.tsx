@@ -282,3 +282,37 @@ describe("AskPage motion preference", () => {
     window.matchMedia = originalMatchMedia;
   });
 });
+
+describe("AskPage when history cannot be saved", () => {
+  it("keeps the answer on screen and says it was not saved", async () => {
+    const pushToast = vi.fn();
+    appendMessage.mockRejectedValueOnce(new Error("Missing or insufficient permissions"));
+    mockedRun.mockResolvedValue({
+      text: "An answer that cannot be stored.",
+      predicted: {
+        inferenceMode: "only_in_cloud",
+        reason: "device-not-ready",
+        degraded: false,
+        explanation: "cloud",
+        diagnostics: { chars: 4, heavyThresholdChars: 800, taskKind: "chat" },
+      },
+      actual: "in_cloud",
+      latencyMs: 800,
+      detectedScript: "latin",
+      fallbackReason: null,
+      modelUsed: "gemini-3.6-flash",
+    } as Awaited<ReturnType<typeof runInference>>);
+
+    renderAsk({ pushToast });
+    fireEvent.change(screen.getByLabelText("Your question"), { target: { value: "Will this save?" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
+
+    // the answer is never thrown away because storage failed
+    await waitFor(() => expect(screen.getByText(/An answer that cannot be stored\./)).toBeTruthy());
+    await waitFor(() =>
+      expect(pushToast).toHaveBeenCalledWith(
+        expect.objectContaining({ kind: "error", message: expect.stringMatching(/could not be saved to history/i) }),
+      ),
+    );
+  });
+});
