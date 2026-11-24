@@ -24,6 +24,7 @@ npm run verify      # lint → types → 130 tests → production build
 | The ledger export is self-describing and keeps disagreements | `npm test` (8 cases) | pass |
 | No unused code or type holes | `tsc -b`, `oxlint src` | 0 errors, 0 warnings |
 | The Quiz screen renders cards, prose fallback and exam sections | `npm test` (`QuizPage.test.tsx`, jsdom, 5 cases) | pass |
+| Quiz generates real flashcards through the model | clicked "Flashcards" on the deployed site with sample notes | 8 cards returned, last generation badged `☁️ cloud 6826 ms`, reason `device-not-ready` |
 | History works with no authenticated identity | rendered in the browser with auth failing | shows **local only · not synced**, no dead-end screen |
 | Readiness can be checked without guessing | `npm run preflight` | reports config PASS, AI Logic 403 with the exact console step, auth state, App Check mode |
 | The app builds and precaches | `vite build` | 14 precache entries, 1.19 MB |

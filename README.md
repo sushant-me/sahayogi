@@ -10,6 +10,8 @@ Built for **#BuildHybridAI 2026** (Devpost). Web platform (Chrome), Firebase AI 
 
 ![Ask page: a real cloud answer badged "cloud 4992 ms", with the routing rail beside it](docs/screenshots/ask-cloud.png)
 
+![Quiz page: eight generated flashcards from pasted notes, badged cloud 6826 ms](docs/screenshots/quiz-flashcards.png)
+
 ---
 
 ## 1. The problem
