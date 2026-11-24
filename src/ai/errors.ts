@@ -142,10 +142,11 @@ export function classifyError(error: unknown): AppError {
   if (haystack.includes("not found") || haystack.includes("404") || haystack.includes("model_not_found") || haystack.includes("invalid model")) {
     return make("MODEL_NOT_FOUND");
   }
-  if (haystack.includes("api_not_enabled") || haystack.includes("api not enabled") || haystack.includes("has not been used in project")) {
-    return make("MODEL_NOT_FOUND", "AI Logic is not enabled for this project.", undefined);
-  }
+  // "API has not been used in project" / API_NOT_ENABLED is an enablement problem,
+  // not a wrong model id — it belongs with the permission branch below.
   if (
+    haystack.includes("has not been used in project") ||
+    haystack.includes("service_disabled") ||
     haystack.includes("permission denied") ||
     haystack.includes("access_denied") ||
     haystack.includes("permission_denied") ||

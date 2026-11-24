@@ -39,12 +39,12 @@ describe("classifyError", () => {
     expect(classifyError(new Error("model_not_found: gemini-9")).code).toBe("MODEL_NOT_FOUND");
   });
 
-  it("recognises AI Logic not being enabled for the project", () => {
+  it("treats 'API not enabled' as enablement, not as a wrong model id", () => {
     const error = classifyError(
       new Error("Firebase AI Logic API has not been used in project 123 before or it is disabled."),
     );
-    expect(error.code).toBe("MODEL_NOT_FOUND");
-    expect(error.message).toMatch(/not enabled/i);
+    expect(error.code).toBe("PERMISSION_DENIED");
+    expect(error.hint).toMatch(/AI Logic/i);
   });
 
   it("recognises network failures", () => {
@@ -121,5 +121,17 @@ describe("classifyError — service-level refusals", () => {
 
   it("still classifies a plain fetch failure as a network problem", () => {
     expect(classifyError(new Error("Failed to fetch")).code).toBe("NETWORK");
+  });
+});
+
+describe("classifyError — AI Logic not enabled", () => {
+  it("recognises the SERVICE_DISABLED wording", () => {
+    const classified = classifyError(
+      new Error(
+        "Firebase AI Logic API has not been used in project 508887070917 before or it is disabled.",
+      ),
+    );
+    expect(classified.code).toBe("PERMISSION_DENIED");
+    expect(classified.hint).toMatch(/AI Logic/i);
   });
 });

@@ -6,7 +6,7 @@ anyone can repeat them. Claims that could **not** be verified yet are listed at 
 Run the whole automated gate in one command:
 
 ```bash
-npm run verify      # lint → types → 129 tests → production build
+npm run verify      # lint → types → 130 tests → production build
 ```
 
 ---

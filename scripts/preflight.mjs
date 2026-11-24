@@ -91,12 +91,25 @@ async function checkAiLogic() {
     return record("AI Logic", "PASS", `model answered: "${reply.trim().slice(0, 40)}"`);
   }
 
-  if (response.status === 403 && /permission denied|access_denied/i.test(text)) {
+  const disabled = /has not been used in project|service_disabled/i.test(text);
+  const denied = /permission denied|access_denied/i.test(text);
+
+  if (response.status === 403 && (disabled || denied)) {
     return record(
       "AI Logic",
       "FAIL",
-      "403 ACCESS_DENIED — the service is not enabled for this project",
-      "Console → AI Logic → Get started → Gemini Developer API → Get started with this API → accept the terms and click Enable API.",
+      disabled
+        ? "403 SERVICE_DISABLED — the AI Logic API has never been enabled for this project"
+        : "403 ACCESS_DENIED — firebasevertexai.googleapis.com refuses this project",
+      "Console → AI Logic → Get started → Gemini Developer API → Get started with this API → Enable API (this accepts the Gemini API terms).",
+    );
+  }
+  if (response.status === 403) {
+    return record(
+      "AI Logic",
+      "FAIL",
+      "403 — the request was refused by the service",
+      "Check that AI Logic is enabled and that App Check is configured for this origin.",
     );
   }
   if (response.status === 400) {
