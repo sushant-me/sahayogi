@@ -13,8 +13,14 @@ cd ~/life/sahayogi
 npm run preflight
 ```
 
-All three lines must read `PASS` (or `MANUAL` resolved by step 2). If `AI Logic` still says `403`, the
-cloud half of the video cannot be recorded honestly — see §9 instead of faking it.
+Everything must read `PASS` (`MANUAL` for the on-device model is resolved by step 1). Note what the
+`AI Logic` line actually means now: *reachable, App Check enforced* — a raw probe cannot mint a reCAPTCHA
+token, so a `PASS` there proves the service is up and protecting itself. The real proof of inference is
+**Settings → Test one answer** in the app, which is the check to run before recording.
+
+If preflight reports a failure you cannot explain, do not record around it — the honest move is §9
+(explain the state) rather than filming a claim the screen contradicts. Pre-flight and a failure playbook
+for the day itself are in [demo-day.md](demo-day.md).
 
 ---
 
