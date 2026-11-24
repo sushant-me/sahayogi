@@ -46,3 +46,11 @@ describe("AnswerText", () => {
     expect(container.querySelectorAll(".h-2").length).toBeGreaterThan(0);
   });
 });
+
+describe("AnswerText separators", () => {
+  it("treats a markdown horizontal rule as spacing, not literal text", () => {
+    render(<AnswerText text={"Question one\n\n---\n\nAnswer key"} />);
+    expect(screen.getByText("Answer key")).toBeTruthy();
+    expect(screen.queryByText("---")).toBeNull();
+  });
+});

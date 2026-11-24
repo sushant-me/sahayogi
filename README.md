@@ -34,6 +34,8 @@ The on-device half needs Chrome with the Gemini Nano weights installed; without 
 
 ![Settings: policy: remote, source: remote, heavyThresholdChars 60 — changed with no deploy](docs/screenshots/policy-remote.png)
 
+![Quiz exam: ten generated questions with an answer key, badged cloud 81133 ms](docs/screenshots/quiz-exam.png)
+
 A real exported ledger is committed at [docs/evidence/](docs/evidence/) — one row per decision with the
 requested mode, the SDK's reported source, the model that answered, and whether the two agreed.
 

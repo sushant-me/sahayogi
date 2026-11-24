@@ -25,6 +25,11 @@ function parseBlocks(raw: string): Block[] {
       blocks.push({ kind: "paragraph", text: "" });
       continue;
     }
+    if (/^([-*_])\1{2,}$/.test(trimmed)) {
+      // a markdown horizontal rule is structure, not content
+      blocks.push({ kind: "paragraph", text: "" });
+      continue;
+    }
     if (/^```/.test(trimmed)) {
       // fenced code delimiters carry no content of their own
       continue;

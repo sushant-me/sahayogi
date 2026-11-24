@@ -160,6 +160,10 @@ export function QuizPage() {
             </Button>
           </div>
         </div>
+        <p className="mt-1.5 text-[10.5px] leading-relaxed text-muted">
+          The exam is a long generation — about a minute in practice — and the badge afterwards reports which path
+          actually ran.
+        </p>
 
       </BentoCard>
 

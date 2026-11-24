@@ -24,6 +24,7 @@ npm run verify      # lint → types → 130 tests → production build
 | The ledger export is self-describing and keeps disagreements | `npm test` (8 cases) | pass |
 | No unused code or type holes | `tsc -b`, `oxlint src` | 0 errors, 0 warnings |
 | The Quiz screen renders cards, prose fallback and exam sections | `npm test` (`QuizPage.test.tsx`, jsdom, 5 cases) | pass |
+| Quiz generates a **10-question exam** with an answer key, from prose output | clicked "10-question exam" on the deployed site with sample notes | 10 numbered questions (6 short answer, 4 multiple choice) plus a correct answer key, badged `☁️ cloud 81133 ms`, reason `device-not-ready` — captured at `docs/screenshots/quiz-exam.png` |
 | Quiz generates real flashcards through the model | clicked "Flashcards" on the deployed site with sample notes | 8 cards returned, last generation badged `☁️ cloud 6826 ms`, reason `device-not-ready` |
 | Remote Config drives routing with no deploy | published `routing_policy` with `heavyThresholdChars: 60`, reloaded the deployed app | header chip `policy: remote`, Settings `source: remote`, parsed threshold **60** — captured at `docs/screenshots/policy-remote.png`; restored to 800 afterwards |
 | The ledger export is a real file | asked one question on the deployed app, opened Settings → Export routing log | `docs/evidence/sahayogi-routing-log-2026-11-24-18-18-31.json` — one row: `only_in_cloud` / `device-not-ready` → `in_cloud`, agreed, `gemini-3.6-flash`, 4655 ms |
