@@ -90,7 +90,13 @@ export const DEFAULT_POLICY: RoutingPolicy = {
   preferCloudForTasks: ["exam", "long-summary"],
   onDeviceLanguages: ["en", "ja", "es", "de", "fr"],
   cloudModel: "gemini-3.6-flash",
-  fallbackCloudModels: ["gemini-3.8-flash", "gemini-flash-latest"],
+  /**
+   * Tried in order after `cloudModel`. `gemini-3.8-pro` was removed: it 404s in this project.
+   * `gemini-flash-lite-latest` is last because a lite answer is worth more than no answer when
+   * the free tier is rate-limiting the main models: quotas are metered per model, so a lite
+   * model can still have allowance when the others do not.
+   */
+  fallbackCloudModels: ["gemini-3.8-flash", "gemini-flash-latest", "gemini-flash-lite-latest"],
   onDeviceEnabled: true,
 };
 
