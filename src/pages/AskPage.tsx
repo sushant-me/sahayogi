@@ -186,6 +186,12 @@ export function AskPage() {
         },
       ]);
 
+      // Clear the placeholder *before* persisting: the Firestore write can take a
+      // moment, and during it the final bubble plus the streaming bubble would
+      // both render, showing the same answer twice.
+      setSending(false);
+      setStreamingText("");
+
       logRoute({
         taskKind: "chat",
         chars: text.length,
@@ -194,6 +200,7 @@ export function AskPage() {
         actual: result.actual,
         latencyMs: result.latencyMs,
         degraded: result.predicted.degraded,
+        model: result.modelUsed,
       });
 
       await persist(text, {

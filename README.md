@@ -8,6 +8,8 @@ Built for **#BuildHybridAI 2026** (Devpost). Web platform (Chrome), Firebase AI 
 
 **Live:** https://hackthon-dcdf7.web.app · **Project:** `hackthon-dcdf7`
 
+![Ask page: a real cloud answer badged "cloud 4992 ms", with the routing rail beside it](docs/screenshots/ask-cloud.png)
+
 ---
 
 ## 1. The problem
@@ -152,13 +154,13 @@ Documentation: [architecture](docs/architecture.md) · [verification log](docs/v
 2. **Authentication** → Sign-in method → **Anonymous** → Enable.
 3. **Firestore** → Create database → Production mode → `asia-south1` (closest to Nepal).
 4. **App Check** → register the **Web** app → reCAPTCHA Enterprise site key. Add `localhost` and your Hosting domain.
-5. **AI Logic** → enable. Confirm which cloud model id your project exposes and put it in the policy (default `gemini-3.8-flash`).
+5. **AI Logic** → enable. Confirm which cloud model id your project exposes and put it in the policy (default `gemini-3.6-flash`).
 6. **Remote Config** → create parameter `routing_policy`, type JSON:
 
 ```json
 {
   "heavyThresholdChars": 800,
-  "cloudModel": "gemini-3.8-flash",
+  "cloudModel": "gemini-3.6-flash",
   "preferCloudForTasks": ["exam", "long-summary"],
   "onDeviceLanguages": ["en", "ja", "es", "de", "fr"],
   "onDeviceEnabled": true

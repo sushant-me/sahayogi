@@ -22,6 +22,8 @@ export interface RoutingLogRow {
   degraded: boolean;
   agreed: boolean;
   device: string | null;
+  /** Cloud model that answered, when the cloud was used. */
+  model: string | null;
 }
 
 const STORAGE_KEY = "sahayogi.routingLog";
@@ -87,6 +89,7 @@ export interface LogRouteInput {
   latencyMs: number;
   degraded: boolean;
   device?: string | null;
+  model?: string | null;
 }
 
 export function logRoute(input: LogRouteInput): void {
@@ -105,6 +108,7 @@ export function logRoute(input: LogRouteInput): void {
     degraded: input.degraded,
     agreed: predictedDevice === actuallyDevice,
     device: input.device ?? null,
+    model: input.model ?? null,
   };
 
   rows = [row, ...rows].slice(0, MAX_ROWS);

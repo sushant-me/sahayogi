@@ -8,12 +8,23 @@
 
 import { getAI, GoogleAIBackend, type AI } from "firebase/ai";
 
-import { getFirebaseApp } from "./config";
+import { getFirebaseApp, initAppCheck } from "./config";
 
 let cachedAi: AI | null = null;
 
 export function getAiLogic(): AI {
   if (cachedAi) return cachedAi;
+
+  // AI Logic requires App Check. Initialise it here, immediately before the AI
+  // client, so no request can be sent unattested. (This call was missing during
+  // development, and the symptom was every cloud request returning
+  // "Firebase App Check token is invalid" — a 401 that looks like a key problem.)
+  try {
+    initAppCheck();
+  } catch (error) {
+    console.warn("[sahayogi] App Check failed to initialise:", error);
+  }
+
   cachedAi = getAI(getFirebaseApp(), { backend: new GoogleAIBackend() });
   return cachedAi;
 }

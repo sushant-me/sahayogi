@@ -85,6 +85,51 @@ export function parseFlashcards(raw: string): FlashcardParseResult {
   return { cards, fallbackText, ok: cards.length > 0 };
 }
 
+const LATEX_TOKENS: Array<[RegExp, string]> = [
+  [/\\times/g, "×"],
+  [/\\cdot/g, "·"],
+  [/\\div/g, "÷"],
+  [/\\pm/g, "±"],
+  [/\\approx/g, "≈"],
+  [/\\leq?/g, "≤"],
+  [/\\geq?/g, "≥"],
+  [/\\Omega/g, "Ω"],
+  [/\\omega/g, "ω"],
+  [/\\alpha/g, "α"],
+  [/\\beta/g, "β"],
+  [/\\theta/g, "θ"],
+  [/\\pi/g, "π"],
+  [/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, "($1)/($2)"],
+  [/\\sqrt\{([^{}]+)\}/g, "√($1)"],
+  [/\\text\{([^{}]*)\}/g, "$1"],
+  [/\\left|\\right/g, ""],
+];
+
+/**
+ * Light clean-up of model output.
+ *
+ * Gemini often answers maths-heavy study questions in LaTeX. A study tool should
+ * not show `$V = I \times R$` to a student, so the common tokens are converted and
+ * inline-math delimiters removed. Deliberately conservative: anything unrecognised
+ * is left alone rather than guessed at.
+ */
+export function tidyModelText(raw: string): string {
+  let text = raw;
+  for (const [pattern, replacement] of LATEX_TOKENS) text = text.replace(pattern, replacement);
+  // Strip inline-math delimiters only when the span actually looks like maths:
+  // a formula character, or a single short token such as $V$. Currency such as
+  // "$5 and $7" is prose and must survive.
+  text = text.replace(/\$\$([^$]+)\$\$/g, "$1");
+  text = text.replace(/\$([^$\n]+)\$/g, (whole, inner: string) => {
+    const trimmed = inner.trim();
+    const looksLikeMath = /[\\=^_()]/.test(inner) || /^[A-Za-z][A-Za-z0-9_]{0,7}$/.test(trimmed);
+    return looksLikeMath ? inner : whole;
+  });
+  // bold markers read as noise in a chat bubble
+  text = text.replace(/\*\*([^*]+)\*\*/g, "$1");
+  return text.replace(/[ \t]+\n/g, "\n").trim();
+}
+
 /** Splits a model answer into question blocks for the quiz view. */
 export function splitMarkdownSections(raw: string): Array<{ heading: string; body: string }> {
   const sections: Array<{ heading: string; body: string }> = [];

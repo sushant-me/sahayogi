@@ -62,6 +62,7 @@ function Row({ row }: { row: RoutingLogRow }) {
           <span>{REASON_COPY[row.reason] ?? row.reason}</span>
           <span>{row.chars} chars</span>
           <span>{row.taskKind}</span>
+          {row.model ? <span className="font-mono">{row.model}</span> : null}
           <span className="sm:hidden">{timeAgo(row.at)}</span>
         </div>
       </div>

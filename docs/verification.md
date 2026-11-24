@@ -121,11 +121,38 @@ Getting a cloud answer required four distinct things, each of which failed diffe
    reCAPTCHA Enterprise key was created for `hackthon-dcdf7.web.app` / `localhost` and registered as the
    app's `recaptchaEnterpriseConfig`; only then did the wizard complete.
 4. **Model id** — `gemini-2.5-flash` returns `404 … no longer available to new users. Please update your
-   code to use models/gemini-3.8-flash`. The default is now `gemini-3.8-flash`, plus a fallback chain that
-   walks alternatives on `MODEL_NOT_FOUND` / `MODEL_OVERLOADED`.
+   code to use models/gemini-3.8-flash`. In this project only **`gemini-3.6-flash`** answered; `3.8-flash`
+   returned `500 high demand` and the rolling alias returned `429 quota`. The default is now
+   `gemini-3.6-flash` with a fallback chain over the others, which took a real answer from 68 s to 5 s.
 
 Fixtures 2 and 3 explain every "permission denied" seen in earlier rounds: enabling a service does not
 create the AI Logic config, and App Check needs an attestation provider, not a debug token.
+
+### The root cause of five rounds of 401s — **found by reading the network tab**
+
+Every cloud request had been failing with `401 Firebase App Check token is invalid`. The final
+diagnostic was that **no reCAPTCHA network traffic occurred at all** during an attempt — meaning App Check
+was never initialising. It was:
+
+```ts
+export function initAppCheck(): AppCheck | null { … }   // defined
+// …and never called anywhere in the app
+```
+
+The function existed, was correct, and was dead code. That is why enabling services, registering a
+reCAPTCHA key, and lowering `minValidScore` all changed nothing: no token was ever being minted.
+
+Fixed by initialising App Check inside `getAiLogic()` — immediately before the AI client, so no request
+can be sent unattested — and again during bootstrap so the first question is not the token exchange's
+first use. The deployed app then answered normally on the first try.
+
+Two follow-on defects were found the same way, by looking at the result rather than trusting it:
+
+- **Duplicate answer bubble**: the streaming placeholder stayed visible while the Firestore write was
+  awaited, so the same answer rendered twice. Now the placeholder is cleared before persisting.
+- **LaTeX leaking into a study answer**: `$V = I \times R$` was shown literally. A conservative
+  `tidyModelText()` converts common tokens (×, ÷, √, fractions) and strips math delimiters only when the
+  span actually looks like maths — so `"It costs $5 and $7"` survives.
 
 ### A hang found by running it, not by reading it — **found and fixed**
 
@@ -176,7 +203,7 @@ Therefore the on-device demo is recorded on Windows/macOS Chrome. See
 
 | Claim | Status | Blocked on |
 |---|---|---|
-| A cloud request **succeeds**, returning `inferenceSource === "in_cloud"` | **transport verified, blocked on quota** — App Check, auth and model routing all work; the last live attempt reached a valid model and returned `429 You exceeded your current quota`, and `gemini-3.8-flash` returned `500 high demand` | Free-tier quota to reset, or billing enabled |
+| A cloud request **succeeds**, returning `inferenceSource === "in_cloud"` | **VERIFIED** on the deployed site — badge `☁️ cloud 4992 ms`, one cloud decision in the ledger, and a real Gemini answer (`V = IR`) | — |
 | Anonymous sign-in works against this project | **unverified** | Authentication is not initialised (`auth/configuration-not-found`); the console offers an Identity Platform upgrade path for it |
 | Firestore writes/reads and the offline queue sync | **unverified** | Firestore database not created yet |
 | Deployed Hosting URL serves the build with correct headers | **unverified** | `firebase deploy` needs an authenticated CLI |

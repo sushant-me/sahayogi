@@ -16,6 +16,7 @@ import {
   configDiagnostics,
   ensureAnonymousUser,
   fetchRoutingPolicyRaw,
+  initAppCheck,
   isFirebaseConfigured,
 } from "../firebase/config";
 import {
@@ -90,6 +91,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
 
     void (async () => {
+      // Attestation first: it is required by AI Logic and its token exchange is
+      // the slowest part of the first request.
+      try {
+        initAppCheck();
+      } catch (error) {
+        console.warn("[sahayogi] App Check init failed:", error);
+      }
       const auth = await ensureAnonymousUser();
       if (!cancelled) {
         setUid(auth.uid);

@@ -89,8 +89,8 @@ export const DEFAULT_POLICY: RoutingPolicy = {
   heavyThresholdChars: 800,
   preferCloudForTasks: ["exam", "long-summary"],
   onDeviceLanguages: ["en", "ja", "es", "de", "fr"],
-  cloudModel: "gemini-3.8-flash",
-  fallbackCloudModels: ["gemini-3.8-pro", "gemini-flash-latest", "gemini-3.6-flash"],
+  cloudModel: "gemini-3.6-flash",
+  fallbackCloudModels: ["gemini-3.8-flash", "gemini-flash-latest", "gemini-3.8-pro"],
   onDeviceEnabled: true,
 };
 

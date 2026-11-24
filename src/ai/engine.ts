@@ -21,6 +21,7 @@ import type {
   UserMode,
 } from "./policy";
 import { decideRoute } from "./policy";
+import { tidyModelText } from "./parse";
 import { SYSTEM_INSTRUCTION, taskPrompt } from "./prompts";
 
 /**
@@ -158,7 +159,7 @@ export async function runInference(input: RunInferenceInput): Promise<RunInferen
 
     const finalResponse = await response;
     return {
-      text: (accumulated || safeResponseText(finalResponse)).trim(),
+      text: tidyModelText(accumulated || safeResponseText(finalResponse)),
       actual: finalResponse.inferenceSource ?? null,
     };
   };

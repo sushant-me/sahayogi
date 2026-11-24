@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parseFlashcards, splitMarkdownSections } from "../src/ai/parse";
+import { parseFlashcards, splitMarkdownSections, tidyModelText } from "../src/ai/parse";
 
 describe("parseFlashcards", () => {
   it("parses a clean JSON array", () => {
@@ -91,5 +91,25 @@ describe("splitMarkdownSections", () => {
     const sections = splitMarkdownSections("## A\n## B\ntext");
     expect(sections).toHaveLength(1);
     expect(sections[0].heading).toBe("B");
+  });
+});
+
+describe("tidyModelText", () => {
+  it("converts common LaTeX tokens and drops math delimiters", () => {
+    const out = tidyModelText("The formula is **$V = I \\times R$**, where $V$ is voltage.");
+    expect(out).toBe("The formula is V = I × R, where V is voltage.");
+  });
+
+  it("converts fractions and roots", () => {
+    expect(tidyModelText("$\\frac{V}{R}$ and $\\sqrt{2}$")).toBe("(V)/(R) and √(2)");
+  });
+
+  it("leaves ordinary prose untouched", () => {
+    const prose = "Ohm's law states that current is proportional to voltage.";
+    expect(tidyModelText(prose)).toBe(prose);
+  });
+
+  it("does not eat currency symbols that are not maths", () => {
+    expect(tidyModelText("It costs $5 and $7")).toBe("It costs $5 and $7");
   });
 });
