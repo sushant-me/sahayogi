@@ -284,7 +284,8 @@ This is documented rather than hidden: the app's failure mode when the weights a
 ```bash
 npm test        # the whole suite, ~2s, no network, no browser, no Firebase project
 npm run verify  # lint + types + tests + production build, in that order
-npm run deploy  # runs verify first, so a red suite cannot reach Hosting
+npm run check:deployed  # is the live URL serving the build in dist/ right now?
+npm run deploy  # verify, deploy, then confirm the URL serves THAT build (a red suite cannot ship)
 npm run preflight # probe the real project: AI Logic, auth, App Check, on-device
 npm run a11y      # structural accessibility audit: every page, desktop + phone width
 FIREBASE_API_KEY=… npm run rules:check  # prove owner-only Firestore rules from outside (allow + deny cases)
