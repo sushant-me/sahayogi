@@ -137,14 +137,18 @@ final.inferenceSource;   // "on_device" | "in_cloud" — reported by the SDK, no
   side, and disagreement is surfaced.
 - **Offline is real**, not decorative: a service worker precaches the shell (verified by reloading with
   the network cut at the protocol level) and Firestore queues writes made offline.
-- The routing table is **tested** — 182 tests, no credentials required: every branch of the decision table,
+- The routing table is **tested** — 196 tests, no credentials required: every branch of the decision table,
   the download/offline refusals, error mapping, the edge that a prompt exactly at the threshold stays
   on-device, and the Ask flow end to end with only the engine mocked.
 - **The claims are checkable from outside.** Three scripts, not adjectives: `npm run rules:check` proves the
   Firestore rules allow the owner and deny everyone else (12 cases, including that stored messages cannot be
-  rewritten), `npm run a11y` audits every page at two widths, and `npm run preflight` plus the in-app
+  rewritten), `npm run a11y` audits every page at two widths plus reduced motion, and `npm run preflight` plus the in-app
   self-check probe the live project. `docs/verification.md` lists what was measured and what was not.
 - A failure taxonomy where **every error code has a UI affordance**; there is no silent `catch`.
+- **Rate limiting is survived, not just reported.** A capacity failure retries twice (20 s, then 45 s) with
+  a visible attempt counter and a Cancel button. Measured on the deployed app during a throttled window:
+  attempts one and two were refused and the *third* answered in 16.4 s — and the ledger still recorded one
+  decision for that prompt, not three.
 - The app **degrades honestly** in browsers without the Prompt API (verified: Brave 158.1.100.58 returns
   `typeof LanguageModel === "undefined"`) — it says cloud-only instead of pretending.
 

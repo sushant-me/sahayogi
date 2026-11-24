@@ -98,7 +98,8 @@ export function AskPage() {
   const [autoRetrying, setAutoRetrying] = useState(false);
   const chatIdRef = useRef<string | null>(null);
   const autoRetryRef = useRef<number | null>(null);
-  const autoRetriedRef = useRef(false);
+  const autoRetryCountRef = useRef(0);
+  const [autoRetryCount, setAutoRetryCount] = useState(0);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const routingLog = useRoutingLog();
   const summary = useMemo(() => summariseLog(routingLog), [routingLog]);
@@ -195,7 +196,7 @@ export function AskPage() {
     if (!text || sending) return;
 
     // A fresh question earns a fresh automatic retry; the retry's own call must not.
-    if (!isAutoRetry) autoRetriedRef.current = false;
+    if (!isAutoRetry) autoRetryCountRef.current = 0;
 
     cancelAutoRetry();
     setSending(true);
@@ -260,24 +261,31 @@ export function AskPage() {
       const appErr = error as AppError;
       const capacity = appErr.code === "QUOTA_EXCEEDED" || appErr.code === "MODEL_OVERLOADED";
 
-      // Free-tier quota is metered per minute and per model, so a capacity failure is
-      // often transient. Retry once automatically after a short, visible wait — and only
-      // once, so a genuinely exhausted quota cannot turn into a loop.
-      if (capacity && !autoRetriedRef.current) {
-        autoRetriedRef.current = true;
+      /**
+       * Free-tier quota is metered per minute and per model, and measurement showed the tier
+       * slotting in occasional requests at ~20 s rather than being cleanly exhausted. One retry
+       * 20 s later often lands before the next window opens, so there are two: at 20 s and 45 s.
+       * Bounded, visible, cancellable — a retry budget, not a loop.
+       */
+      const RETRY_DELAYS_MS = [20_000, 45_000];
+      if (capacity && autoRetryCountRef.current < RETRY_DELAYS_MS.length) {
+        const attempt = autoRetryCountRef.current;
+        autoRetryCountRef.current = attempt + 1;
+        setAutoRetryCount(attempt + 1);
         setSending(false);
         setStreamingText("");
         setAutoRetrying(true);
+        const waitSeconds = Math.round(RETRY_DELAYS_MS[attempt] / 1000);
         pushToast({
           kind: "info",
-          message: "The free tier is rate-limiting requests. Retrying once automatically…",
+          message: `The free tier is rate-limiting requests. Retrying in ${waitSeconds}s…`,
           hint: "You can cancel; the question is kept.",
         });
         autoRetryRef.current = window.setTimeout(() => {
           autoRetryRef.current = null;
           setAutoRetrying(false);
           void send(text, true);
-        }, 20_000);
+        }, RETRY_DELAYS_MS[attempt]);
         return;
       }
 
@@ -449,7 +457,7 @@ export function AskPage() {
               {autoRetrying ? (
                 <div className="mb-2 flex flex-wrap items-center gap-2 rounded-lg border border-warn/40 bg-warn/10 px-3 py-2">
                   <span className="text-[11.5px] text-warn">
-                    Rate-limited by the free tier — retrying once automatically in a few seconds.
+                    Rate-limited by the free tier — retrying automatically (attempt {autoRetryCount + 1} of 3).
                   </span>
                   <Button variant="ghost" onClick={cancelAutoRetry}>
                     Cancel

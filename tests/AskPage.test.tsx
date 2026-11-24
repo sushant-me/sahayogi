@@ -177,7 +177,7 @@ describe("AskPage", () => {
 });
 
 describe("AskPage automatic retry on capacity", () => {
-  it("retries once by itself when the free tier is rate-limiting, and says so", async () => {
+  it("retries by itself when the free tier is rate-limiting, and says so", async () => {
     vi.useFakeTimers();
     const quotaError = Object.assign(new Error("429 You exceeded your current quota"), {
       code: "QUOTA_EXCEEDED",
@@ -206,7 +206,7 @@ describe("AskPage automatic retry on capacity", () => {
     fireEvent.click(screen.getByRole("button", { name: "Send" }));
 
     // first attempt fails, the banner appears and the question is not lost
-    await vi.waitFor(() => expect(screen.getByText(/retrying once automatically/i)).toBeTruthy());
+    await vi.waitFor(() => expect(screen.getByText(/retrying automatically/i)).toBeTruthy());
     expect(mockedRun).toHaveBeenCalledTimes(1);
 
     // after the wait it retries by itself, without the user touching anything
@@ -215,7 +215,7 @@ describe("AskPage automatic retry on capacity", () => {
     vi.useRealTimers();
   });
 
-  it("does not retry a second time, so an exhausted quota cannot loop", async () => {
+  it("stops after two retries, so an exhausted quota cannot loop", async () => {
     vi.useFakeTimers();
     const quotaError = Object.assign(new Error("429 You exceeded your current quota"), {
       code: "QUOTA_EXCEEDED",
@@ -228,13 +228,17 @@ describe("AskPage automatic retry on capacity", () => {
     fireEvent.change(screen.getByLabelText("Your question"), { target: { value: "Loop?" } });
     fireEvent.click(screen.getByRole("button", { name: "Send" }));
 
-    await vi.waitFor(() => expect(screen.getByText(/retrying once automatically/i)).toBeTruthy());
+    await vi.waitFor(() => expect(screen.getByText(/retrying automatically/i)).toBeTruthy());
     await vi.advanceTimersByTimeAsync(21_000);
     await vi.waitFor(() => expect(mockedRun).toHaveBeenCalledTimes(2));
 
-    // the second failure is terminal for this question: no third attempt, and a retry control
-    await vi.advanceTimersByTimeAsync(25_000);
-    expect(mockedRun).toHaveBeenCalledTimes(2);
+    // the budget allows one more, 45s out
+    await vi.advanceTimersByTimeAsync(46_000);
+    await vi.waitFor(() => expect(mockedRun).toHaveBeenCalledTimes(3));
+
+    // then it is terminal for this question: no fourth attempt, and a retry control
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(mockedRun).toHaveBeenCalledTimes(3);
     await vi.waitFor(() => expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy());
     vi.useRealTimers();
   });
@@ -327,11 +331,11 @@ describe("AskPage automatic retry", () => {
     fireEvent.change(screen.getByLabelText("Your question"), { target: { value: "Will this be logged twice?" } });
     fireEvent.click(screen.getByRole("button", { name: "Send" }));
 
-    // the automatic retry is scheduled 20s out
-    await vi.advanceTimersByTimeAsync(21_000);
+    // the retry budget is 20s then 45s; advance past both
+    await vi.advanceTimersByTimeAsync(70_000);
 
-    // two attempts were made...
-    expect(mockedRun).toHaveBeenCalledTimes(2);
+    // three attempts were made (original + two retries)...
+    expect(mockedRun).toHaveBeenCalledTimes(3);
     // ...but one decision is recorded, because an attempt that is about to be retried
     // is not yet an outcome.
     expect(mockedLog).toHaveBeenCalledTimes(1);
