@@ -170,7 +170,7 @@ final.inferenceSource;   // "on_device" | "in_cloud" — reported by the SDK, no
 |---|---|
 | **Technological Implementation** | `src/ai/policy.ts` (pure, tested routing table) · `src/ai/models.ts` (one model, both paths) · `src/ai/engine.ts` (`inferenceSource` capture) · `tests/` (182 tests) · Settings → Transparency panel |
 | **Design** | Four coherent screens, per-answer badges, live route preview, prediction styled differently from evidence (dashed vs solid), device preflight with download progress, skeletons/empty states, typed error toasts, dark-first consistent spacing |
-| **Potential Impact** | On-device answers cost nothing and leave the device; heavy work still available; Devanagari handled explicitly; offline cold start; history readable with no network |
+| **Potential Impact** | On-device answers cost nothing and leave the device; heavy work still available; Devanagari handled explicitly **and explained up front in Nepali**, so the target user learns the rule rather than discovering it from a badge; offline cold start; history readable with no network |
 | **Quality of the Idea** | The router is the product. Prediction-vs-reality is recorded and shown, including when the prediction was wrong. Language capability is surfaced as a routing reason rather than hidden. |
 
 ---

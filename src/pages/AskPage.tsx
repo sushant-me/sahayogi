@@ -361,6 +361,21 @@ export function AskPage() {
                       Try “Long notes”: it is deliberately long, so the router sends it to the cloud while “Light
                       question” stays on-device once the model is installed.
                     </p>
+                    {/*
+                      The target user is a Nepali student, and the router sends Devanagari to the cloud. Saying
+                      so up front — in Nepali — turns a surprise ("why is my question leaving the device?")
+                      into information. It is the same reason the answer badge shows afterwards.
+                    */}
+                    <div className="mx-auto mt-4 max-w-md rounded-xl border border-line/70 bg-panel-2/40 px-3 py-2 text-left">
+                      <p lang="ne" className="text-[12px] leading-relaxed text-ink">
+                        नेपालीमा सोध्न सकिन्छ — देवनागरी प्रश्न क्लाउडमा जान्छ, किनभने यस यन्त्रको मोडेलले देवनागरी
+                        पढ्दैन।
+                      </p>
+                      <p className="mt-1 text-[10.5px] leading-relaxed text-muted">
+                        Nepali works, but it goes to the cloud: the on-device model does not read Devanagari. The
+                        router says so rather than failing silently.
+                      </p>
+                    </div>
                   </div>
                 </div>
               ) : (
