@@ -341,7 +341,9 @@ export function AskPage() {
           flush
           accent="neutral"
           meta={
-            <div className="flex items-center gap-2">
+            // At 390px the three-way mode toggle is wider than the card header: without
+            // wrapping, "Cloud" sits 46px past the viewport edge and cannot be tapped.
+            <div className="flex flex-wrap items-center justify-end gap-2">
               <Button
                 variant="ghost"
                 onClick={startNewChat}

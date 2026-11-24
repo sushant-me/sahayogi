@@ -107,7 +107,18 @@ const AUDIT = `(() => {
       return !f.closest("label") && f.id !== "g-recaptcha-response" && !f.className.includes("g-recaptcha");
     })
     .map((f) => f.id || f.tagName.toLowerCase());
+  // Controls that are laid out past the viewport edge cannot be tapped. Document-level
+  // overflow checks miss this: a card with overflow:hidden clips its children silently.
+  const clipped = [...document.querySelectorAll('button, a[href], input, textarea, select')]
+    .filter((el) => el.offsetParent !== null && el.getBoundingClientRect().width > 0)
+    .map((el) => {
+      const r = el.getBoundingClientRect();
+      return { label: (el.textContent || el.getAttribute('aria-label') || el.tagName).trim().slice(0, 28), right: Math.round(r.right), left: Math.round(r.left) };
+    })
+    .filter((c) => c.right > window.innerWidth + 1 || c.left < -1);
+
   return {
+    clipped,
     h1: [...document.querySelectorAll("h1")].map((h) => h.innerText.trim()).filter(Boolean),
     hasMain: !!document.querySelector("main"),
     hasLabelledNav: !!document.querySelector("nav[aria-label]"),
@@ -148,6 +159,9 @@ try {
         result = await evaluate(AUDIT);
       }
       const problems = [
+        ...(result.clipped.length
+          ? [`${result.clipped.length} control(s) outside the viewport: ${result.clipped.map((c) => c.label).join(', ')}`]
+          : []),
         result.h1.length === 1 ? null : `h1 count ${result.h1.length}`,
         result.hasMain ? null : "no <main>",
         result.hasLabelledNav ? null : "nav not labelled",

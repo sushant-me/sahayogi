@@ -72,10 +72,13 @@ export function BentoCard({
         className,
       ].join(" ")}
     >
+      {/* flex-wrap matters on phones: a card whose meta is a control (the mode toggle) is
+          wider than 390px minus padding, and without wrapping the last segment falls off the
+          screen edge instead of moving to its own line. */}
       {label || meta ? (
-        <header className={`flex items-start justify-between gap-3 ${flush ? "px-4 pb-2 pt-3.5" : "px-4 pt-3.5"}`}>
+        <header className={`flex flex-wrap items-start justify-between gap-3 ${flush ? "px-4 pb-2 pt-3.5" : "px-4 pt-3.5"}`}>
           <h2 className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted">{label}</h2>
-          {meta ? <div className="shrink-0 text-[11px] text-muted">{meta}</div> : null}
+          {meta ? <div className="min-w-0 text-[11px] text-muted">{meta}</div> : null}
         </header>
       ) : null}
       <div className={flush ? "" : "px-4 pb-4 pt-1.5"}>{children}</div>
