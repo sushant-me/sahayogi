@@ -27,3 +27,13 @@ describe("ChatMessage retry affordance", () => {
     expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy();
   });
 });
+
+describe("ChatMessage live-region hygiene", () => {
+  it("hides the ticking counter from assistive tech", () => {
+    const { container } = render(<ChatMessage role="model" text="Thinking…" streaming statusSuffix="7s" />);
+    const suffix = container.querySelector('[aria-hidden="true"]');
+    expect(suffix?.textContent).toBe("7s");
+    // the announced text stays stable, so a screen reader is not spammed every second
+    expect(screen.getByText("Thinking…")).toBeTruthy();
+  });
+});

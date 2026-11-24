@@ -285,7 +285,9 @@ export function AskPage() {
           }
         >
           <div className="flex min-h-[430px] flex-col">
-            <div className="flex-1 px-4 pb-2" role="log" aria-live="polite" aria-relevant="additions text" aria-label="Conversation">
+            <div className="flex-1 px-4 pb-2" role="log"
+            aria-live="polite"
+            aria-relevant="additions" aria-label="Conversation">
               {turns.length === 0 && !sending ? (
                 <div className="grid h-full place-items-center py-12">
                   <div className="max-w-md text-center">
@@ -338,9 +340,9 @@ export function AskPage() {
                   {sending ? (
                     <ChatMessage
                       role="model"
-                      text={
-                        streamingText ||
-                        (elapsedMs > 1200 ? `Thinking… ${Math.floor(elapsedMs / 1000)}s` : "Thinking…")
+                      text={streamingText || "Thinking…"}
+                      statusSuffix={
+                        !streamingText && elapsedMs > 1200 ? `${Math.floor(elapsedMs / 1000)}s` : null
                       }
                       predictedMode={preview?.inferenceMode ?? null}
                       actual={null}

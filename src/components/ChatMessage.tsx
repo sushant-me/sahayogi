@@ -30,6 +30,11 @@ export interface ChatMessageProps {
   streaming?: boolean;
   /** Present only on failed answers: retry the same question. */
   onRetry?: () => void;
+  /**
+   * A live counter shown next to a "thinking" placeholder. Hidden from assistive tech:
+   * it changes every second, and announcing that would drown out the answer itself.
+   */
+  statusSuffix?: string | null;
 }
 
 export function ChatMessage({
@@ -42,6 +47,7 @@ export function ChatMessage({
   syncedOffline = false,
   streaming = false,
   onRetry,
+  statusSuffix = null,
 }: ChatMessageProps) {  if (role === "user") {
     return (
       <div className="flex justify-end">
@@ -70,7 +76,16 @@ export function ChatMessage({
           ) : null}
           {streaming ? <span className="text-[11px] text-accent">streaming…</span> : null}
         </div>
-        <AnswerText text={text} />
+        {statusSuffix ? (
+          <div className="flex items-baseline gap-1.5">
+            <AnswerText text={text} />
+            <span aria-hidden="true" className="text-[11px] tabular-nums text-muted">
+              {statusSuffix}
+            </span>
+          </div>
+        ) : (
+          <AnswerText text={text} />
+        )}
 
         {!streaming && (text || onRetry) ? (
           <div className="mt-2 flex items-center justify-end gap-2">
