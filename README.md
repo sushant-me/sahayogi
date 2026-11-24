@@ -124,12 +124,13 @@ src/
   pages/                  Ask, Quiz, History, Settings, Setup
 tests/                    102 unit tests over the pure layer and orchestration
 docs/architecture.md      sequence + decision diagrams (Mermaid, renders on GitHub)
+docs/verification.md      what was measured, how, and what is still unverified
 docs/browser-support.md   measured capability matrix (incl. Brave, Chromium)
 SUBMISSION.md             paste-ready Devpost pack + judging-criteria evidence map
 firestore.rules           owner-only access, default deny
 ```
 
-Documentation: [architecture](docs/architecture.md) · [browser support](docs/browser-support.md) · [submission pack](SUBMISSION.md)
+Documentation: [architecture](docs/architecture.md) · [verification log](docs/verification.md) · [browser support](docs/browser-support.md) · [submission pack](SUBMISSION.md)
 
 ---
 
@@ -264,7 +265,7 @@ What is *not* covered by automated tests, and is verified manually: a real cloud
 
 **New project**, built during the #BuildHybridAI submission period (sprint opened 15 Nov 2026; submission 30 Nov 2026). Not a pre-existing app.
 
-Done: hybrid engine, routing policy + 64 tests, four screens, Firestore persistence with offline queue, App Check wiring, Remote Config policy, rules, deploy config.
+Done: hybrid engine, routing policy + 102 tests (policy, parsing, orchestration, error taxonomy, ledger), four screens, Firestore persistence with offline queue, PWA offline cold start, App Check wiring, Remote Config policy, rules, deploy config, submission pack and docs.
 Recorded on: Chrome 158 on Windows/macOS (on-device) — see §6 for why the Linux box could not serve the weights.
 
 ### Known limitations
