@@ -25,6 +25,8 @@ npm run verify      # lint → types → 130 tests → production build
 | No unused code or type holes | `tsc -b`, `oxlint src` | 0 errors, 0 warnings |
 | The Quiz screen renders cards, prose fallback and exam sections | `npm test` (`QuizPage.test.tsx`, jsdom, 5 cases) | pass |
 | Quiz generates real flashcards through the model | clicked "Flashcards" on the deployed site with sample notes | 8 cards returned, last generation badged `☁️ cloud 6826 ms`, reason `device-not-ready` |
+| Remote Config drives routing with no deploy | published `routing_policy` with `heavyThresholdChars: 60`, reloaded the deployed app | header chip `policy: remote`, Settings `source: remote`, parsed threshold **60** — captured at `docs/screenshots/policy-remote.png`; restored to 800 afterwards |
+| The deployed build boots with no network | cut the network at protocol level after the service worker activated, then reloaded | **PASS** — full UI rendered, header `offline`, offline banner shown |
 | A chat and its messages persist to Firestore and come back from it | asked a question on the deployed site, then opened History | chat listed as `synced` with `2 messages`, user + model turns, model turn badged `☁️ cloud 5247 ms`, route mix `☁️ 1`, and **zero** "Database not found" warnings |
 | History works with no authenticated identity | rendered in the browser with auth failing | shows **local only · not synced**, no dead-end screen |
 | Readiness can be checked without guessing | `npm run preflight` | reports config PASS, AI Logic 403 with the exact console step, auth state, App Check mode |

@@ -163,7 +163,10 @@ export function getRemoteConfigInstance(): RemoteConfig {
   rc.defaultConfig = {
     routing_policy: JSON.stringify(DEFAULT_POLICY),
   };
-  rc.settings.minimumFetchIntervalMillis = 60_000;
+  // Deliberately 0: this app's whole point is that an operator can change routing
+  // policy and see it take effect on the next load. The 60s client cache would make
+  // a live policy change look like it did nothing.
+  rc.settings.minimumFetchIntervalMillis = 0;
   cachedRemoteConfig = rc;
   return rc;
 }
@@ -175,7 +178,7 @@ export interface RemotePolicyResult {
 }
 
 /** Fetches routing_policy with a hard timeout so boot is never blocked. */
-export async function fetchRoutingPolicyRaw(timeoutMs = 3000): Promise<RemotePolicyResult> {
+export async function fetchRoutingPolicyRaw(timeoutMs = 8000): Promise<RemotePolicyResult> {
   if (!isFirebaseConfigured) {
     return { raw: JSON.stringify(DEFAULT_POLICY), source: "default" };
   }
@@ -192,9 +195,12 @@ export async function fetchRoutingPolicyRaw(timeoutMs = 3000): Promise<RemotePol
       error: activated ? undefined : "Remote Config did not respond in time; using cached/default values.",
     };
   } catch (error) {
+    // Offline or blocked fetch is not an error the user can act on: fall back to
+    // defaults and keep the detail for Settings rather than shouting "error" in the
+    // header.
     return {
       raw: null,
-      source: "error",
+      source: "default",
       error: error instanceof Error ? error.message : String(error),
     };
   }

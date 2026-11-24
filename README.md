@@ -12,6 +12,8 @@ Built for **#BuildHybridAI 2026** (Devpost). Web platform (Chrome), Firebase AI 
 
 ![Quiz page: eight generated flashcards from pasted notes, badged cloud 6826 ms](docs/screenshots/quiz-flashcards.png)
 
+![Settings: policy: remote, source: remote, heavyThresholdChars 60 — changed with no deploy](docs/screenshots/policy-remote.png)
+
 ---
 
 ## 1. The problem

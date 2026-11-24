@@ -52,10 +52,7 @@ export function DevicePreflight() {
       meta={<Chip tone={copy.tone}>{deviceChecking ? "checking" : copy.label}</Chip>}
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="text-[13px] font-medium text-ink">On-device model</span>
-          <Chip tone={copy.tone}>{deviceChecking ? "checking" : copy.label}</Chip>
-        </div>
+        <p className="text-[11.5px] text-muted">{deviceChecking ? "checking…" : "status below"}</p>
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
