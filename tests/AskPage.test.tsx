@@ -239,3 +239,46 @@ describe("AskPage automatic retry on capacity", () => {
     vi.useRealTimers();
   });
 });
+
+describe("AskPage motion preference", () => {
+  it("scrolls instantly when the user asked for reduced motion", async () => {
+    const scroll = vi.fn();
+    Element.prototype.scrollIntoView = scroll;
+    const originalMatchMedia = window.matchMedia;
+    window.matchMedia = ((query: string) => ({
+      matches: query.includes("prefers-reduced-motion"),
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    })) as unknown as typeof window.matchMedia;
+
+    mockedRun.mockResolvedValue({
+      text: "An answer.",
+      predicted: {
+        inferenceMode: "only_in_cloud",
+        reason: "device-not-ready",
+        degraded: false,
+        explanation: "cloud",
+        diagnostics: { chars: 4, heavyThresholdChars: 800, taskKind: "chat" },
+      },
+      actual: "in_cloud",
+      latencyMs: 100,
+      detectedScript: "latin",
+      fallbackReason: null,
+      modelUsed: "gemini-3.6-flash",
+    } as Awaited<ReturnType<typeof runInference>>);
+
+    renderAsk();
+    fireEvent.change(screen.getByLabelText("Your question"), { target: { value: "Question" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
+    await waitFor(() => expect(mockedRun).toHaveBeenCalled());
+
+    await waitFor(() => expect(scroll).toHaveBeenCalled());
+    expect(scroll.mock.calls.at(-1)?.[0]).toMatchObject({ behavior: "auto" });
+    window.matchMedia = originalMatchMedia;
+  });
+});

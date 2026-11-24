@@ -118,7 +118,12 @@ export function AskPage() {
   }, [input, userMode, deviceAvailability, online, policy]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
+    // `behavior: "smooth"` is an explicit argument and overrides the CSS rule that disables
+    // scroll animation under prefers-reduced-motion, so the preference has to be read here.
+    const reduced =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    bottomRef.current?.scrollIntoView({ block: "end", behavior: reduced ? "auto" : "smooth" });
   }, [turns, streamingText]);
 
   // A free-tier answer can legitimately take half a minute, and until the first token

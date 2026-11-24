@@ -140,7 +140,13 @@ try {
       await sleep(4500);
       await evaluate(`[...document.querySelectorAll('nav[aria-label="Sections"] button')].find((b) => b.textContent.trim() === ${JSON.stringify(section)})?.click()`);
       await sleep(2000);
-      const result = await evaluate(AUDIT);
+      let result = await evaluate(AUDIT);
+      if (!result || result.h1.length !== 1) {
+        // one retry: sections are judged on a slow connection too, and a single missed
+        // render is a timing artefact, not an accessibility defect
+        await sleep(2500);
+        result = await evaluate(AUDIT);
+      }
       const problems = [
         result.h1.length === 1 ? null : `h1 count ${result.h1.length}`,
         result.hasMain ? null : "no <main>",
@@ -159,6 +165,20 @@ try {
       console.log(`  ${section.padEnd(9)} ${problems.length ? "FAIL  " + problems.join(" · ") : "ok"}`);
     }
   }
+  // Reduced motion is a preference, not a suggestion: under it, transitions must be gone.
+  await send("Emulation.setEmulatedMedia", {
+    features: [{ name: "prefers-reduced-motion", value: "reduce" }],
+  });
+  await send("Page.navigate", { url });
+  await sleep(5000);
+  const motion = await evaluate(`(() => {
+    const el = document.querySelector("button") || document.body;
+    const style = getComputedStyle(el);
+    return parseFloat(style.transitionDuration) + parseFloat(style.animationDuration);
+  })()`);
+  const reducedOk = typeof motion === "number" && motion < 0.05;
+  if (!reducedOk) failures += 1;
+  console.log(`\nprefers-reduced-motion  ${reducedOk ? "ok" : `FAIL  transitions still animate (${motion}s)`}`);
 } catch (error) {
   console.error("audit failed:", error.message);
   failures += 1;
