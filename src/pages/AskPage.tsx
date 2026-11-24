@@ -332,10 +332,19 @@ export function AskPage() {
                 <div className="grid h-full place-items-center py-12">
                   <div className="max-w-md text-center">
                     <p className="text-[15px] font-medium tracking-tight text-ink">Nothing asked yet</p>
-                    <p className="mx-auto mt-1.5 max-w-sm text-[12.5px] leading-relaxed text-muted">
-                      Start with one of these. The third is deliberately long, so you can watch the router send it to
-                      the cloud while the first stays on-device.
+                    <p className="mx-auto mt-1.5 max-w-md text-[12.5px] leading-relaxed text-muted">
+                      Ask anything you are revising. Each answer is badged with where it <em>actually</em> ran — read
+                      from the SDK afterwards, not from what the app intended.
                     </p>
+                    <div className="mt-3 flex items-center justify-center gap-4 text-[11.5px]">
+                      <span className="flex items-center gap-1.5 text-muted">
+                        <span aria-hidden="true">⚡</span> on this device
+                      </span>
+                      <span className="flex items-center gap-1.5 text-muted">
+                        <span aria-hidden="true">☁️</span> in the cloud
+                      </span>
+                      <span className="text-muted">+ latency</span>
+                    </div>
                     <div className="mt-4 flex flex-wrap justify-center gap-1.5">
                       {EXAMPLES.map((example) => (
                         <Button key={example.label} variant="secondary" onClick={() => void send(example.text)}>
@@ -343,6 +352,10 @@ export function AskPage() {
                         </Button>
                       ))}
                     </div>
+                    <p className="mx-auto mt-3 max-w-md text-[11px] leading-relaxed text-muted">
+                      Try “Long notes”: it is deliberately long, so the router sends it to the cloud while “Light
+                      question” stays on-device once the model is installed.
+                    </p>
                   </div>
                 </div>
               ) : (
