@@ -108,8 +108,11 @@ export function classifyError(error: unknown): AppError {
 
   const err = error as { code?: unknown; message?: unknown; name?: unknown } | null;
   const rawCode = typeof err?.code === "string" ? err.code : "";
+  const rawName = typeof err?.name === "string" ? err.name : "";
   const message = typeof err?.message === "string" ? err.message : String(error ?? "Unknown error");
-  const haystack = `${rawCode} ${message}`.toLowerCase();
+  // `name` matters: DOMException-based failures (NotSupportedError, AbortError)
+  // put the classification there, not in the message.
+  const haystack = `${rawName} ${rawCode} ${message}`.toLowerCase();
 
   const make = (code: AppErrorCode, msg = message, reason?: RouteReason) =>
     appError(code, msg, { cause: error, reason });
@@ -123,7 +126,13 @@ export function classifyError(error: unknown): AppError {
   if (haystack.includes("notsupported") || haystack.includes("not supported") || haystack.includes("unsupported language")) {
     return make("LANGUAGE_UNSUPPORTED_ON_DEVICE");
   }
-  if (haystack.includes("quota") || haystack.includes("resource_exhausted") || haystack.includes("429")) {
+  // gRPC/HTTP codes arrive with either separator depending on the transport.
+  if (
+    haystack.includes("quota") ||
+    haystack.includes("resource_exhausted") ||
+    haystack.includes("resource-exhausted") ||
+    haystack.includes("429")
+  ) {
     return make("QUOTA_EXCEEDED");
   }
   if (haystack.includes("not found") || haystack.includes("404") || haystack.includes("model_not_found") || haystack.includes("invalid model")) {
@@ -146,8 +155,24 @@ export function isOffline(): boolean {
   return typeof navigator !== "undefined" && navigator.onLine === false;
 }
 
-/** Raised before any SDK call when we know the request cannot work. */
-export function offlineWithoutDeviceError(): AppError {
+/**
+ * Raised before any SDK call when we already know the request cannot work.
+ *
+ * The message distinguishes the two very different situations that both end in
+ * "cannot run offline". Telling someone who deliberately pinned the cloud to
+ * "no on-device model is ready" would be technically true and practically useless.
+ */
+export function offlineError(options: { pinnedCloud: boolean }): AppError {
+  if (options.pinnedCloud) {
+    return appError(
+      "NETWORK",
+      "You pinned inference to the cloud, but the network is unavailable.",
+      {
+        hint: "Switch Mode to Auto to use this device while offline.",
+        reason: "forced-cloud",
+      },
+    );
+  }
   return appError(
     "OFFLINE_NO_DEVICE",
     "You are offline and no on-device model is ready.",

@@ -122,7 +122,7 @@ src/
   state/routingLog.ts     prediction-vs-reality ledger
   components/             RouteBadge, TransparencyPanel, DevicePreflight, ErrorBoundary, …
   pages/                  Ask, Quiz, History, Settings, Setup
-tests/                    72 unit tests over the pure layer
+tests/                    102 unit tests over the pure layer and orchestration
 docs/architecture.md      sequence + decision diagrams (Mermaid, renders on GitHub)
 docs/browser-support.md   measured capability matrix (incl. Brave, Chromium)
 SUBMISSION.md             paste-ready Devpost pack + judging-criteria evidence map
@@ -213,7 +213,8 @@ This is documented rather than hidden: the app's failure mode when the weights a
 ## 7. Tests
 
 ```bash
-npm test        # 72 tests, ~0.2s, no network, no browser, no Firebase project
+npm test        # 102 tests, ~1s, no network, no browser, no Firebase project
+npm run verify  # lint + types + tests + production build, in that order
 npm run build   # tsc -b + vite build
 ```
 
@@ -225,6 +226,8 @@ The suite covers the parts that can be wrong in ways users feel:
 - **`parseFlashcards` / `splitMarkdownSections`** — fences, prose around JSON, key variants, brackets inside strings, unterminated JSON (15 cases).
 - **`badgeForMode` / `badgeForPreview`** — agreement, fallback, reverse disagreement, and the distinction between a prediction and an observation (8 cases).
 - **`summariseLog` / `exportRoutingLogJSON`** — ledger aggregates, latency averaging that ignores rows with no timing, and a self-describing export that keeps disagreements visible (8 cases).
+- **`runInference`** — the orchestration layer, with only `models.ts` mocked: routing handoff to the SDK per task, Devanagari → cloud, refusals that happen *before* an SDK call (offline with no device, offline while pinned to cloud, pinned device versus unreadable script), token ordering, empty-answer handling, and App Check/quota error mapping with the route reason preserved (13 cases).
+- **`classifyError` / `offlineError`** — the failure taxonomy, including DOMException names like `NotSupportedError`, hyphenated gRPC codes, and a distinct message for "you pinned the cloud while offline" (17 cases).
 
 What is *not* covered by automated tests, and is verified manually: a real cloud call through App Check, and a real on-device call. Both are listed in the app's own Settings page under "How to verify this yourself".
 

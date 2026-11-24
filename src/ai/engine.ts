@@ -8,7 +8,7 @@
  * The prediction/reality pair is the product's core data, not a debugging aid.
  */
 
-import { appError, classifyError, offlineWithoutDeviceError } from "./errors";
+import { appError, classifyError, offlineError } from "./errors";
 import { detectScript } from "./language";
 import { buildModel } from "./models";
 import type {
@@ -67,7 +67,7 @@ export async function runInference(input: RunInferenceInput): Promise<RunInferen
   // Fail fast and specifically, rather than letting the SDK produce a generic
   // network error the user cannot act on.
   if (!input.online && predicted.inferenceMode === "only_in_cloud") {
-    throw offlineWithoutDeviceError();
+    throw offlineError({ pinnedCloud: input.userMode === "cloud" });
   }
 
   if (predicted.inferenceMode === "only_on_device" && detection.unsupportedForOnDevice) {

@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "verify": "npm run lint && tsc -b && vitest run && vite build"
   },
   "dependencies": {
     "firebase": "^13.4.0",
