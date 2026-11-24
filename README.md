@@ -14,7 +14,8 @@ Built for **#BuildHybridAI 2026** (Devpost). Web platform (Chrome), Firebase AI 
 
 0. **Settings → Run self-check** proves the wiring in your browser: config, anonymous auth, App Check
    attestation, a Firestore write → read → delete round-trip, Remote Config, and the on-device model.
-   It never calls the model, so it costs no quota.
+   Those checks never call the model, so they cost no quota — which is why there is also an optional
+   **Test one answer** probe that trades a little quota for the truth about whether it actually answers.
 1. Open **https://hackthon-dcdf7.web.app** in Chrome and click **Light question**. The answer carries a badge
    naming the source the SDK reported, plus its latency.
 2. **Settings → Transparency**: the ledger of every decision — the mode the policy requested, the source the
@@ -27,6 +28,11 @@ Built for **#BuildHybridAI 2026** (Devpost). Web platform (Chrome), Firebase AI 
 
 The on-device half needs Chrome with the Gemini Nano weights installed; without them the app says
 `no device model` and routes to the cloud rather than pretending. See [docs/browser-support.md](docs/browser-support.md).
+
+Two operational notes from building this: the service worker registers in **prompt** mode, so a tab that
+was open during a deploy shows a *Reload* banner rather than silently running the previous build; and the
+free tier is metered per minute and per model, so a rate-limited answer is retried once automatically before
+you are asked to do anything.
 
 
 **Live:** https://hackthon-dcdf7.web.app · **Repo:** https://github.com/sushant-me/sahayogi · **Project:** `hackthon-dcdf7`
