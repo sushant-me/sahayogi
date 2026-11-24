@@ -1,5 +1,8 @@
 # Devpost submission pack — #BuildHybridAI 2026
 
+Field-by-field paste sheet (including the short fields with character counts, the "Built With" tags and
+a pre-submit checklist): [docs/devpost-fields.md](docs/devpost-fields.md).
+
 Everything below is written to be pasted straight into the Devpost form. One placeholder remains —
 `<<YOUTUBE_URL>>` — and it can only be filled once the video exists. Everything else is final and
 was checked against the deployed app and the repository, not against memory.

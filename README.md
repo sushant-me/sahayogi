@@ -190,7 +190,7 @@ SUBMISSION.md             paste-ready Devpost pack + judging-criteria evidence m
 firestore.rules           owner-only access, default deny
 ```
 
-Documentation: [architecture](docs/architecture.md) · [verification log](docs/verification.md) · [browser support](docs/browser-support.md) · [recording runbook](docs/recording.md) · [submission pack](SUBMISSION.md)
+Documentation: [architecture](docs/architecture.md) · [verification log](docs/verification.md) · [browser support](docs/browser-support.md) · [recording runbook](docs/recording.md) · [submission pack](SUBMISSION.md) · [Devpost copy sheet](docs/devpost-fields.md)
 
 ---
 
