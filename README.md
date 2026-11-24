@@ -292,6 +292,7 @@ npm run preflight # probe the real project: AI Logic, auth, App Check, on-device
 npm run a11y      # structural accessibility audit: every page, desktop + phone width
 FIREBASE_API_KEY=… npm run rules:check  # prove owner-only Firestore rules from outside (allow + deny cases)
 npm run smoke     # drive the DEPLOYED app end to end (add --inference to spend a little quota)
+npm run walkthrough  # check every beat of the video script is actually on screen, before recording
 
 # CI (`.github/workflows/ci.yml`) tests every push. `live.yml` runs `smoke` and `a11y` against the
 # hosted app nightly and on demand — a green build does not prove a working deployment.

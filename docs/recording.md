@@ -24,6 +24,16 @@ for the day itself are in [demo-day.md](demo-day.md).
 
 ---
 
+### Rehearse the beats, not just the connection
+
+`npm run smoke` answers "is the site working?". `npm run walkthrough` answers a different question:
+*is every element my narration points at actually on screen?* It walks the beats below — the ⚡/☁️
+legend, the route preview before sending, the Nepali preview, the ledger with its failure count, the
+self-check, and the per-screen titles — and fails if any of them is missing. Add `--inference` to
+include a real answer and its badge.
+
+Prose in a script and pixels on a page drift apart; this is the gap between them.
+
 ## 1. The second machine (Windows or macOS)
 
 1. Install **Google Chrome** (not Chromium, not Brave — Brave does not expose the Prompt API at all;

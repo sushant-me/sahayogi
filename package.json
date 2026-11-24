@@ -17,7 +17,8 @@
     "a11y": "node scripts/a11y.mjs",
     "rules:check": "node scripts/rules-check.mjs",
     "smoke": "node scripts/smoke.mjs",
-    "check:deployed": "node scripts/check-deployed.mjs"
+    "check:deployed": "node scripts/check-deployed.mjs",
+    "walkthrough": "node scripts/walkthrough.mjs"
   },
   "dependencies": {
     "firebase": "^13.4.0",

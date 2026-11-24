@@ -16,6 +16,7 @@ If you are **running or recording it**:
 |---|---|
 | [recording.md](recording.md) | how to record the demo on a machine with Gemini Nano, including what to do if the cloud path cannot answer |
 | [demo-day.md](demo-day.md) | the day-of runbook: pre-flight, shot order, failure playbook, and the wording to avoid |
+| `npm run walkthrough` | checks that every element the narration points at is on screen, in the state the script films it |
 | [browser-support.md](browser-support.md) | what happens in Chrome with and without the weights, in Chromium, in Firefox, and under refused storage |
 
 If you are **submitting it**:
