@@ -161,3 +161,36 @@ repo will find the truth, and the honesty is itself part of the score.
 | `Nano not downloaded` chip | weights absent | `chrome://components` → Check for update |
 | History says **local only** | sign-in unavailable | enable Anonymous (may require Identity Platform) or accept local-only |
 | Nothing answers after reload offline | service worker never installed | load online once, wait for `navigator.serviceWorker.ready` |
+
+## Narration (read these lines while recording)
+
+Spoken text for the shots above. Roughly 95 seconds if you keep moving.
+
+1. **Intro** — "Sahayogi is a study assistant that runs on your laptop. Gemini Nano, on-device.
+   Cloud only when it has to be. Same SDK both ways — and every answer tells you which one ran."
+
+2. **Light question** — "This is a short English question. Watch the badge: on-device, with the
+   latency. That answer never left the machine."
+
+3. **Airplane mode** — "Now the network is off. Same question. Still answers — and the app says
+   offline, because a study tool that quietly needs a connection is useless on a bus."
+
+4. **Nepali** — "Devanagari. The on-device model doesn't read it, and the app says so instead of
+   pretending: cloud, with the reason 'unsupported language'. That decision is in the open."
+
+5. **Long notes** — "Paste real notes and it summarises them. Over the threshold, so it goes to the
+   cloud deliberately — and still reports the source and the model that answered."
+
+6. **Transparency** — "Every prompt is a decision. Predicted mode, actual source, latency, and whether
+   they agreed. Export it as JSON — that file is a real one, not a mock-up."
+
+7. **Remote Config** — "Change the routing policy in the console. No deploy. Reload, and the new
+   threshold is what the router uses."
+
+8. **Quiz** — "Flashcards stay on the device. The exam goes to the cloud. Same router, same engine."
+
+9. **Code** — "One function: getGenerativeModel, with on-device and in-cloud parameters. The SDK
+   decides; we read back inferenceSource and show it. That's the whole hybrid story in one file."
+
+10. **Close** — "Offline-capable, honest about where every answer ran, and running today at
+    hackthon-dcdf7.web.app."

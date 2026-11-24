@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import type { InferenceMode, InferenceSource, RouteReason } from "../ai/policy";
+import { AnswerText } from "./AnswerText";
 import { RouteBadge } from "./RouteBadge";
 
 const REASON_SHORT: Partial<Record<RouteReason, string>> = {
@@ -66,7 +67,7 @@ export function ChatMessage({
           ) : null}
           {streaming ? <span className="text-[11px] text-accent">streaming…</span> : null}
         </div>
-        <div className="whitespace-pre-wrap text-[13.5px] leading-relaxed text-ink">{text}</div>
+        <AnswerText text={text} />
 
         {!streaming && text ? (
           <div className="mt-2 flex justify-end">

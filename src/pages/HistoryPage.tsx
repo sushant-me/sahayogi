@@ -9,6 +9,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { RouteBadge } from "../components/RouteBadge";
+import { AnswerText } from "../components/AnswerText";
 import { BentoCard, BentoGrid } from "../components/bento";
 import { Button, Chip } from "../components/ui";
 import type { InferenceMode } from "../ai/policy";
@@ -175,7 +176,11 @@ export function HistoryPage() {
                         <span className="text-[11px] text-muted">{message.reason}</span>
                       ) : null}
                     </div>
-                    <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-ink">{message.text}</p>
+                    {message.role === "model" ? (
+                      <AnswerText text={message.text} />
+                    ) : (
+                      <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-ink">{message.text}</p>
+                    )}
                   </div>
                 ))}
               </div>
