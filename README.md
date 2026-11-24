@@ -7,6 +7,7 @@ The distinguishing feature is not that it uses AI. It is that **every answer sta
 [![CI](https://github.com/sushant-me/sahayogi/actions/workflows/ci.yml/badge.svg)](https://github.com/sushant-me/sahayogi/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Live](https://img.shields.io/badge/live-hackthon--dcdf7.web.app-3fb950.svg)](https://hackthon-dcdf7.web.app)
+[![Live checks](https://github.com/sushant-me/sahayogi/actions/workflows/live.yml/badge.svg)](https://github.com/sushant-me/sahayogi/actions/workflows/live.yml)
 
 Built for **#BuildHybridAI 2026** (Devpost). Web platform (Chrome), Firebase AI Logic hybrid inference.
 
@@ -286,6 +287,9 @@ npm run preflight # probe the real project: AI Logic, auth, App Check, on-device
 npm run a11y      # structural accessibility audit: every page, desktop + phone width
 FIREBASE_API_KEY=… npm run rules:check  # prove owner-only Firestore rules from outside (allow + deny cases)
 npm run smoke     # drive the DEPLOYED app end to end (add --inference to spend a little quota)
+
+# CI (`.github/workflows/ci.yml`) tests every push. `live.yml` runs `smoke` and `a11y` against the
+# hosted app nightly and on demand — a green build does not prove a working deployment.
 npm run build   # tsc -b + vite build
 ```
 
