@@ -17,6 +17,7 @@ export type AppErrorCode =
   | "LANGUAGE_UNSUPPORTED_ON_DEVICE"
   | "OFFLINE_NO_DEVICE"
   | "QUOTA_EXCEEDED"
+  | "PERMISSION_DENIED"
   | "MODEL_NOT_FOUND"
   | "NETWORK"
   | "CANCELLED"
@@ -60,6 +61,8 @@ const HINTS: Record<AppErrorCode, string> = {
   LANGUAGE_UNSUPPORTED_ON_DEVICE: "This language is cloud-only. Switch Mode to Auto to route it automatically.",
   OFFLINE_NO_DEVICE: "You are offline and no on-device model is ready. Reconnect, or turn on offline mode while online.",
   QUOTA_EXCEEDED: "The free AI Logic quota is exhausted for now. Wait a few minutes and retry.",
+  PERMISSION_DENIED:
+    "AI Logic is not enabled for this project. Build → AI Logic → Get started, accept the terms, then retry.",
   MODEL_NOT_FOUND: "The configured cloud model id was rejected. Check routing_policy.cloudModel.",
   NETWORK: "The network request failed. Check your connection and retry.",
   CANCELLED: "The request was cancelled.",
@@ -75,6 +78,7 @@ const RETRYABLE: Record<AppErrorCode, boolean> = {
   LANGUAGE_UNSUPPORTED_ON_DEVICE: false,
   OFFLINE_NO_DEVICE: true,
   QUOTA_EXCEEDED: true,
+  PERMISSION_DENIED: false,
   MODEL_NOT_FOUND: false,
   NETWORK: true,
   CANCELLED: false,
@@ -140,6 +144,14 @@ export function classifyError(error: unknown): AppError {
   }
   if (haystack.includes("api_not_enabled") || haystack.includes("api not enabled") || haystack.includes("has not been used in project")) {
     return make("MODEL_NOT_FOUND", "AI Logic is not enabled for this project.", undefined);
+  }
+  if (
+    haystack.includes("permission denied") ||
+    haystack.includes("access_denied") ||
+    haystack.includes("permission_denied") ||
+    haystack.includes("403")
+  ) {
+    return make("PERMISSION_DENIED");
   }
   if (haystack.includes("fetch") || haystack.includes("network") || haystack.includes("offline") || haystack.includes("failed to fetch")) {
     return make("NETWORK");

@@ -60,10 +60,26 @@ describe("decideRoute — capability gates", () => {
     expect(decision.reason).toBe("unsupported-language");
   });
 
-  it("prefers the device while the model is merely downloadable", () => {
-    const decision = decideRoute(input({ availability: "downloadable" }));
+  it("keeps light prompts on-device once the model is actually available", () => {
+    const decision = decideRoute(input({ availability: "available" }));
     expect(decision.inferenceMode).toBe("prefer_on_device");
     expect(decision.reason).toBe("light-task");
+  });
+
+  it.each(["downloadable", "downloading"] as const)(
+    "stays in the cloud while the model is only %s",
+    (availability) => {
+      const decision = decideRoute(input({ availability }));
+      expect(decision.inferenceMode).toBe("only_in_cloud");
+      expect(decision.reason).toBe("device-not-ready");
+      expect(decision.explanation).toMatch(/not downloaded|download/i);
+    },
+  );
+
+  it("still honours an explicit device pin while the model is not downloaded", () => {
+    const decision = decideRoute(input({ userMode: "on-device", availability: "downloadable" }));
+    expect(decision.inferenceMode).toBe("only_on_device");
+    expect(decision.reason).toBe("forced-device");
   });
 });
 

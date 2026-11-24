@@ -55,6 +55,7 @@ const REASON_PREVIEW: Record<RouteReason, string> = {
   "forced-cloud": "pinned to cloud",
   "kill-switch": "disabled by remote config",
   "device-unavailable": "no device model available",
+  "device-not-ready": "model not downloaded yet",
   "unsupported-language": "this language is cloud-only",
   "heavy-task": "heavy task",
   "long-prompt": "over the length threshold",

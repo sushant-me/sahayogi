@@ -13,6 +13,7 @@ import { detectScript } from "./language";
 import { buildModel } from "./models";
 import type {
   DeviceAvailability,
+  InferenceMode,
   InferenceSource,
   RoutingDecision,
   RoutingPolicy,
@@ -21,6 +22,16 @@ import type {
 } from "./policy";
 import { decideRoute } from "./policy";
 import { SYSTEM_INSTRUCTION, taskPrompt } from "./prompts";
+
+/**
+ * How long we wait for the *initial* call before assuming the device cannot serve
+ * it. Chrome reports "downloadable" on machines where the weights will never
+ * arrive (observed on Linux), and in that state the SDK waits on the download
+ * instead of falling back — which reaches the user as an indefinite hang.
+ */
+const DEFAULT_DEVICE_CALL_TIMEOUT_MS = 12_000;
+
+const DEVICE_TIMEOUT_CODE = "device-timeout";
 
 export interface RunInferenceInput {
   text: string;
@@ -31,6 +42,8 @@ export interface RunInferenceInput {
   online: boolean;
   systemInstruction?: string;
   onToken?: (chunk: string) => void;
+  /** Overridable so tests do not have to wait twelve seconds. */
+  deviceTimeoutMs?: number;
 }
 
 export interface RunInferenceResult {
@@ -40,6 +53,13 @@ export interface RunInferenceResult {
   actual: InferenceSource | null;
   latencyMs: number;
   detectedScript: string | null;
+  /** Set when we had to fall back after the device failed to answer in time. */
+  fallbackReason: "device-timeout" | null;
+}
+
+interface Attempt {
+  text: string;
+  actual: InferenceSource | null;
 }
 
 function safeResponseText(response: { text: () => string }): string {
@@ -50,9 +70,40 @@ function safeResponseText(response: { text: () => string }): string {
   }
 }
 
+function deviceTimeout(): Error {
+  return Object.assign(new Error("The on-device model did not respond in time."), {
+    code: DEVICE_TIMEOUT_CODE,
+  });
+}
+
+function isDeviceTimeout(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    (error as { code?: unknown }).code === DEVICE_TIMEOUT_CODE
+  );
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(deviceTimeout()), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
 export async function runInference(input: RunInferenceInput): Promise<RunInferenceResult> {
   const systemInstruction = input.systemInstruction ?? SYSTEM_INSTRUCTION;
   const detection = detectScript(input.text, input.policy.onDeviceLanguages);
+  const timeoutMs = input.deviceTimeoutMs ?? DEFAULT_DEVICE_CALL_TIMEOUT_MS;
 
   const predicted = decideRoute({
     text: input.text,
@@ -78,17 +129,18 @@ export async function runInference(input: RunInferenceInput): Promise<RunInferen
     );
   }
 
-  const model = buildModel({
-    mode: predicted.inferenceMode,
-    cloudModel: input.policy.cloudModel,
-    systemInstruction,
-  });
-
   const prompt = taskPrompt(input.taskKind, input.text);
-  const startedAt = performance.now();
 
-  try {
-    const { stream, response } = await model.generateContentStream(prompt);
+  const execute = async (mode: InferenceMode): Promise<Attempt> => {
+    const model = buildModel({
+      mode,
+      cloudModel: input.policy.cloudModel,
+      systemInstruction,
+    });
+
+    const devicePath = mode === "prefer_on_device" || mode === "only_on_device";
+    const pending = model.generateContentStream(prompt);
+    const { stream, response } = devicePath ? await withTimeout(pending, timeoutMs) : await pending;
 
     let accumulated = "";
     for await (const chunk of stream) {
@@ -106,10 +158,43 @@ export async function runInference(input: RunInferenceInput): Promise<RunInferen
     }
 
     const finalResponse = await response;
-    const actual = finalResponse.inferenceSource ?? null;
-    const text = (accumulated || safeResponseText(finalResponse)).trim();
+    return {
+      text: (accumulated || safeResponseText(finalResponse)).trim(),
+      actual: finalResponse.inferenceSource ?? null,
+    };
+  };
 
-    if (!text) {
+  const startedAt = performance.now();
+
+  try {
+    let attempt: Attempt;
+    let fallbackReason: RunInferenceResult["fallbackReason"] = null;
+
+    try {
+      attempt = await execute(predicted.inferenceMode);
+    } catch (error) {
+      if (!isDeviceTimeout(error)) throw error;
+
+      // The user demanded the device: do not quietly do something else.
+      if (predicted.inferenceMode === "only_on_device") {
+        throw appError(
+          "DEVICE_NOT_READY",
+          "The on-device model did not respond. It may still be downloading, or Chrome could not start it.",
+          {
+            reason: predicted.reason,
+            hint: "Wait for the download to finish, or switch Mode to Auto to use the cloud.",
+          },
+        );
+      }
+
+      // We *predicted* the device; reality is the cloud. Say so instead of
+      // pretending the prediction was right — the badge and ledger will show the
+      // disagreement, which is the honest outcome.
+      fallbackReason = "device-timeout";
+      attempt = await execute("only_in_cloud");
+    }
+
+    if (!attempt.text) {
       throw appError("UNKNOWN", "The model returned an empty response.", {
         reason: predicted.reason,
         retryable: true,
@@ -117,11 +202,12 @@ export async function runInference(input: RunInferenceInput): Promise<RunInferen
     }
 
     return {
-      text,
+      text: attempt.text,
       predicted,
-      actual,
+      actual: attempt.actual,
       latencyMs: Math.round(performance.now() - startedAt),
       detectedScript: detection.script,
+      fallbackReason,
     };
   } catch (error) {
     const classified = classifyError(error);
@@ -129,6 +215,7 @@ export async function runInference(input: RunInferenceInput): Promise<RunInferen
       cause: classified.cause,
       reason: predicted.reason,
       retryable: classified.retryable,
+      hint: classified.hint,
     });
   }
 }

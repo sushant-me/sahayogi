@@ -36,6 +36,7 @@ export type RouteReason =
   | "forced-cloud"
   | "kill-switch"
   | "device-unavailable"
+  | "device-not-ready"
   | "unsupported-language"
   | "heavy-task"
   | "long-prompt"
@@ -230,6 +231,18 @@ export function decideRoute(input: RoutingInput): RoutingDecision {
       availability === "unsupported"
         ? "This browser does not expose the Prompt API, so inference runs in the cloud."
         : "Chrome reports the on-device model is unavailable on this machine, so inference runs in the cloud.",
+    );
+  }
+
+  // 4b. The model exists but is not on disk yet. Asking the SDK for the device in
+  // this state makes it wait on a download that may never happen — which presents
+  // as an indefinite hang. Until the model is genuinely available we stay in the
+  // cloud, and the UI offers the download explicitly instead.
+  if (availability !== "available") {
+    return decide(
+      "only_in_cloud",
+      "device-not-ready",
+      "The on-device model is not downloaded yet, so this runs in the cloud. Use “Enable offline mode” to download it and keep future prompts on this device.",
     );
   }
 

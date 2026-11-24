@@ -178,3 +178,60 @@ describe("runInference — streaming and failure mapping", () => {
     expect(result.actual).toBeNull();
   });
 });
+
+describe("runInference — device timeout fallback", () => {
+  function hangingDeviceModel(chunks: string[], source: "in_cloud") {
+    mockedBuildModel.mockImplementation(({ mode }) => {
+      if (mode === "prefer_on_device" || mode === "only_on_device") {
+        // What Chrome does on this Linux box: the call never settles.
+        return { generateContentStream: () => new Promise(() => {}) } as never;
+      }
+      return {
+        generateContentStream: async () => {
+          const stream = (async function* () {
+            for (const chunk of chunks) yield { text: () => chunk };
+          })();
+          return { stream, response: Promise.resolve({ inferenceSource: source, text: () => chunks.join("") }) };
+        },
+      } as never;
+    });
+  }
+
+  it("falls back to the cloud instead of hanging when the device never answers", async () => {
+    hangingDeviceModel(["Cloud answer."], "in_cloud");
+
+    const result = await runInference(baseInput({ deviceTimeoutMs: 25 }));
+
+    // The prediction is preserved, so the badge can show "cloud (fallback)".
+    expect(result.predicted.inferenceMode).toBe("prefer_on_device");
+    expect(result.actual).toBe("in_cloud");
+    expect(result.fallbackReason).toBe("device-timeout");
+    expect(result.text).toBe("Cloud answer.");
+  });
+
+  it("retries the cloud exactly once", async () => {
+    hangingDeviceModel(["ok"], "in_cloud");
+    await runInference(baseInput({ deviceTimeoutMs: 25 }));
+    expect(mockedBuildModel).toHaveBeenCalledTimes(2);
+    expect(mockedBuildModel).toHaveBeenLastCalledWith(expect.objectContaining({ mode: "only_in_cloud" }));
+  });
+
+  it("refuses to silently do something else when the user pinned the device", async () => {
+    hangingDeviceModel(["should not be used"], "in_cloud");
+
+    const error = await expectAppError(
+      runInference(baseInput({ userMode: "on-device", deviceTimeoutMs: 25 })),
+    );
+    expect(error.code).toBe("DEVICE_NOT_READY");
+    expect(error.hint).toMatch(/Auto/i);
+    // no cloud retry for an explicit device pin
+    expect(mockedBuildModel).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports no fallback when the device answers in time", async () => {
+    fakeModel(["fast"], "on_device");
+    const result = await runInference(baseInput({ deviceTimeoutMs: 5000 }));
+    expect(result.fallbackReason).toBeNull();
+    expect(result.actual).toBe("on_device");
+  });
+});

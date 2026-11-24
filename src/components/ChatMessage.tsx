@@ -10,6 +10,7 @@ const REASON_SHORT: Partial<Record<RouteReason, string>> = {
   "forced-cloud": "pinned to cloud",
   "kill-switch": "remote config",
   "device-unavailable": "no device model",
+  "device-not-ready": "model not downloaded",
   "unsupported-language": "language cloud-only",
   "heavy-task": "heavy task",
   "long-prompt": "long prompt",

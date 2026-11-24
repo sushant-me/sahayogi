@@ -103,3 +103,23 @@ describe("AppError", () => {
     expect(appError("DEVICE_NOT_READY", "m").hint).toMatch(/download/i);
   });
 });
+
+describe("classifyError — service-level refusals", () => {
+  it("does not mistake a 403 for a network failure", () => {
+    const sdkError = new Error(
+      "AI: Error fetching from https://firebasevertexai.googleapis.com/v1beta/projects/p/models/m:streamGenerateContent: [403 ] Permission denied on the service.",
+    );
+    const classified = classifyError(sdkError);
+    expect(classified.code).toBe("PERMISSION_DENIED");
+    expect(classified.retryable).toBe(false);
+    expect(classified.hint).toMatch(/AI Logic/i);
+  });
+
+  it("recognises the ACCESS_DENIED reason token", () => {
+    expect(classifyError(new Error('{"reason":"ACCESS_DENIED"}')).code).toBe("PERMISSION_DENIED");
+  });
+
+  it("still classifies a plain fetch failure as a network problem", () => {
+    expect(classifyError(new Error("Failed to fetch")).code).toBe("NETWORK");
+  });
+});
