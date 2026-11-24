@@ -190,7 +190,9 @@ SUBMISSION.md             paste-ready Devpost pack + judging-criteria evidence m
 firestore.rules           owner-only access, default deny
 ```
 
-Documentation: [architecture](docs/architecture.md) · [verification log](docs/verification.md) · [browser support](docs/browser-support.md) · [recording runbook](docs/recording.md) · [submission pack](SUBMISSION.md) · [Devpost copy sheet](docs/devpost-fields.md)
+Documentation: **[index of all of it](docs/README.md)** — one line per document, so you can pick.
+The two most useful: [proof index](docs/proof.md) (claims → evidence, one page) and
+[submission pack](SUBMISSION.md).
 
 ---
 
