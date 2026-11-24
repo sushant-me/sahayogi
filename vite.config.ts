@@ -39,6 +39,10 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
+        // og-image.png exists for link previews in chat apps, not for the app to run.
+        // Precaching it would make every visitor download ~400 kB they never use, which
+        // directly contradicts the whole point of a small offline-first shell.
+        globIgnores: ["**/og-image.png"],
         navigateFallback: "/index.html",
         navigateFallbackDenylist: [/^\/__/],
         cleanupOutdatedCaches: true,
