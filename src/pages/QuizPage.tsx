@@ -19,6 +19,7 @@ import type { Flashcard } from "../ai/prompts";
 import { RouteBadge } from "../components/RouteBadge";
 import { BentoCard, BentoGrid } from "../components/bento";
 import { Button, Chip } from "../components/ui";
+import { clearQuizSnapshot, readQuizSnapshot, writeQuizSnapshot } from "../state/quizStore";
 import { useDraft } from "../state/useDraft";
 import { useApp } from "../state/appContext";
 import { logRoute } from "../state/routingLog";
@@ -38,11 +39,25 @@ export function QuizPage() {
   const [busy, setBusy] = useState<TaskKind | null>(null);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [failure, setFailure] = useState<{ message: string; hint?: string; task: TaskKind } | null>(null);
-  const [cards, setCards] = useState<Flashcard[] | null>(null);
-  const [rawFallback, setRawFallback] = useState<string | null>(null);
-  const [exam, setExam] = useState<string | null>(null);
+  // An exam costs about a minute to produce, so the last result is restored from a
+  // local snapshot. Read once, then seed each piece of state from it: an effect that
+  // called four setters on mount would be a needless extra render.
+  const [restored] = useState(readQuizSnapshot);
+  const [cards, setCards] = useState<Flashcard[] | null>(() => restored?.cards ?? null);
+  const [rawFallback, setRawFallback] = useState<string | null>(() => restored?.rawFallback ?? null);
+  const [exam, setExam] = useState<string | null>(() => restored?.exam ?? null);
   const [revealed, setRevealed] = useState<Set<number>>(new Set());
-  const [meta, setMeta] = useState<Meta | null>(null);
+  const [meta, setMeta] = useState<Meta | null>(() => restored?.meta ?? null);
+
+  /** Drop restored material and the snapshot behind it. */
+  function clearResults() {
+    clearQuizSnapshot();
+    setCards(null);
+    setRawFallback(null);
+    setExam(null);
+    setMeta(null);
+    setRevealed(new Set());
+  }
 
   // The exam is the longest operation in the app; a static label looks hung.
   useEffect(() => {
@@ -105,6 +120,19 @@ export function QuizPage() {
         actual: result.actual,
         reason: result.predicted.reason,
         latencyMs: result.latencyMs,
+      });
+
+      writeQuizSnapshot({
+        task,
+        cards: task === "flashcards" ? (parseFlashcards(result.text).ok ? parseFlashcards(result.text).cards : null) : null,
+        exam: task === "exam" ? result.text : null,
+        rawFallback: task === "flashcards" && !parseFlashcards(result.text).ok ? parseFlashcards(result.text).fallbackText ?? null : null,
+        meta: {
+          mode: result.predicted.inferenceMode,
+          actual: result.actual,
+          reason: result.predicted.reason,
+          latencyMs: result.latencyMs,
+        },
       });
 
       logRoute({
@@ -246,7 +274,20 @@ export function QuizPage() {
       ) : null}
 
       {cards && cards.length > 0 ? (
-        <BentoCard span="lg:col-span-12 sm:col-span-6" label={`${cards.length} flashcards`} meta={<span>click to reveal</span>}>
+        <BentoCard span="lg:col-span-12 sm:col-span-6" label={`${cards.length} flashcards`}
+          meta={
+            <div className="flex items-center gap-2">
+              <span>click to reveal</span>
+              <button
+                type="button"
+                onClick={clearResults}
+                className="rounded px-1.5 py-0.5 text-[11px] text-muted transition-colors hover:text-ink"
+              >
+                clear
+              </button>
+            </div>
+          }
+        >
           <div className="grid gap-3 sm:grid-cols-2">
             {cards.map((card, index) => {
               const isRevealed = revealed.has(index);
@@ -273,7 +314,19 @@ export function QuizPage() {
       ) : null}
 
       {rawFallback ? (
-        <BentoCard span="lg:col-span-12 sm:col-span-6" label="Model returned prose, not JSON">
+        <BentoCard
+          span="lg:col-span-12 sm:col-span-6"
+          label="Model returned prose, not JSON"
+          meta={
+            <button
+              type="button"
+              onClick={clearResults}
+              className="rounded px-1.5 py-0.5 text-[11px] text-muted transition-colors hover:text-ink"
+            >
+              clear
+            </button>
+          }
+        >
           <p className="mb-2 text-[11.5px] leading-relaxed text-muted">
             On-device models do not always honour structured output. The raw answer is shown rather than discarded.
           </p>
@@ -282,7 +335,19 @@ export function QuizPage() {
       ) : null}
 
       {exam ? (
-        <BentoCard span="lg:col-span-12 sm:col-span-6" label="Practice exam">
+        <BentoCard
+          span="lg:col-span-12 sm:col-span-6"
+          label="Practice exam"
+          meta={
+            <button
+              type="button"
+              onClick={clearResults}
+              className="rounded px-1.5 py-0.5 text-[11px] text-muted transition-colors hover:text-ink"
+            >
+              clear
+            </button>
+          }
+        >
           <div className="space-y-4">
             {examSections.length > 0 ? (
               examSections.map((section, index) => (
