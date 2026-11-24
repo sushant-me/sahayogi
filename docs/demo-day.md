@@ -35,7 +35,15 @@ below is something that has actually bitten this project during development.
 1. **Hard-refresh the tab** (`Ctrl+Shift+R`) or open a fresh window. The service worker
    registers in *prompt* mode: an old tab keeps the previous build until you accept the
    **Reload** banner. Filming a stale build is confusing for everyone.
-2. **Check the quota**, with Settings → **Test one answer**.
+2. **Run the whole thing unattended**, against the deployed URL:
+
+   ```bash
+   npm run smoke -- --inference
+   ```
+
+   It checks the shell, all four sections, the in-app self-check, and one real answer. App-level
+   problems fail the run; a quota failure prints a WARN with the reason instead of pretending the app is
+   broken. Then follow up with Settings → **Test one answer** for the in-app version.
    - `pass` → you are clear.
    - `QUOTA_EXCEEDED` → the free tier is metered per minute *and* per model. Wait for the
      window to reset (a minute clears short bursts; a daily cap needs longer), or enable

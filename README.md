@@ -174,10 +174,11 @@ src/
   state/routingLog.ts     prediction-vs-reality ledger
   components/             RouteBadge, TransparencyPanel, DevicePreflight, ErrorBoundary, …
   pages/                  Ask, Quiz, History, Settings, Setup
-tests/                    173 tests (pure routing, orchestration, UI, persistence)
+tests/                    182 tests (pure routing, orchestration, UI, persistence)
 scripts/preflight.mjs     live readiness check against the project (npm run preflight)
 scripts/a11y.mjs          structural accessibility audit of the deployed app (npm run a11y)
 scripts/rules-check.mjs   proves the Firestore rules allow the owner and deny everyone else
+scripts/smoke.mjs         drives the deployed app end to end, right before you record
 docs/architecture.md      sequence + decision diagrams (Mermaid, renders on GitHub)
 docs/verification.md      what was measured, how, and what is still unverified
 docs/recording.md         step-by-step video runbook, with the honesty fallback
@@ -284,6 +285,7 @@ npm run deploy  # runs verify first, so a red suite cannot reach Hosting
 npm run preflight # probe the real project: AI Logic, auth, App Check, on-device
 npm run a11y      # structural accessibility audit: every page, desktop + phone width
 FIREBASE_API_KEY=… npm run rules:check  # prove owner-only Firestore rules from outside (allow + deny cases)
+npm run smoke     # drive the DEPLOYED app end to end (add --inference to spend a little quota)
 npm run build   # tsc -b + vite build
 ```
 
@@ -335,7 +337,7 @@ What is *not* covered by automated tests, and is verified manually: a real cloud
 
 **New project**, built during the #BuildHybridAI submission period (sprint opened 15 Nov 2026; submission 30 Nov 2026). Not a pre-existing app.
 
-Done: hybrid engine, routing policy + 173 tests (policy, parsing, orchestration, error taxonomy, ledger, screens), four screens, Firestore persistence with offline queue, PWA offline cold start, App Check wiring, Remote Config policy, rules, deploy config, submission pack and docs.
+Done: hybrid engine, routing policy + 182 tests (policy, parsing, orchestration, error taxonomy, ledger, screens), four screens, Firestore persistence with offline queue, PWA offline cold start, App Check wiring, Remote Config policy, rules, deploy config, submission pack and docs.
 Recorded on: Chrome 158 on Windows/macOS (on-device) — see §6 for why the Linux box could not serve the weights.
 
 ### Known limitations
@@ -343,8 +345,10 @@ Recorded on: Chrome 158 on Windows/macOS (on-device) — see §6 for why the Lin
 - **Nepali cannot run on-device** in this Chrome build: the local model accepts `en, ja, es, de, fr`. The router routes it to the cloud deliberately and says why. When Chrome adds Nepali to `expectedInputs`, the policy is one array entry away from using it.
 - Devanagari detection is script-based, not language-based. That is a deliberate choice: guessing language from script is wrong more often than the SDK's own negotiation.
 - Flashcard JSON is parsed leniently rather than constrained, because on-device structured output is not reliable across model versions. The raw answer is shown if parsing fails instead of discarding it.
-- The bundle ships Firebase whole (~300 kB gzipped) and is precached by the service worker, so the first
-  load downloads ~1.2 MB once. Route-level code splitting is the obvious next optimisation.
+- The bundle ships Firebase whole: 1019 kB minified, 303 kB gzipped, **262 kB brotli as actually served**,
+  precached as 1237 KiB, so the first load costs a few seconds on a poor connection (measured at 6.4 s to
+  interactive on Slow 3G; 0.34 s on the next visit). Route-level splitting was tried and moved ~7 kB, so the
+  honest next step is deferring `firebase/ai` off the cold start — see `docs/verification.md`.
 - The service worker caches the shell only. A browser that has never loaded the app online cannot start
   it offline — that is a web-platform limit, not a design choice.
 
