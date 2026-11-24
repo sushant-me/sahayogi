@@ -25,7 +25,9 @@ Built for **#BuildHybridAI 2026** (Devpost). Web platform (Chrome), Firebase AI 
 3. The three files that carry the argument: [src/ai/policy.ts](src/ai/policy.ts) (the routing table),
    [src/ai/models.ts](src/ai/models.ts) (one model object, both paths),
    [src/ai/engine.ts](src/ai/engine.ts) (`inferenceSource` capture).
-4. [docs/verification.md](docs/verification.md) lists what was measured and — deliberately — what was not.
+4. [docs/proof.md](docs/proof.md) is the one-page index: every claim, the cheapest way to check it, and what
+   was observed. [docs/verification.md](docs/verification.md) is the long chronological record, including
+   what was measured and — deliberately — what was not.
 5. Bundle: one 1019 kB chunk, served **brotli-compressed at 262 kB** and cached `immutable`; 14 precache
    entries for offline start. Route-splitting was
    tried and reverted — it moved 7 kB because Firebase dominates, and the measurement is recorded.

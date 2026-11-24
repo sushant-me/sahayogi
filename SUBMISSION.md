@@ -15,6 +15,7 @@ was checked against the deployed app and the repository, not against memory.
 | **Platform selected** | Web (Chrome) |
 | **Hosted URL** | https://hackthon-dcdf7.web.app |
 | **Repo** | https://github.com/sushant-me/sahayogi (public, Apache-2.0 detected in the About panel) |
+| **Evidence index** | [docs/proof.md](docs/proof.md) — claim → how to check → what was observed, on one page |
 | **Video** | `<<YOUTUBE_URL>>` (public, ≤ 3 min, English) |
 
 ---
