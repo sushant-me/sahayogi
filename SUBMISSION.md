@@ -177,6 +177,8 @@ final.inferenceSource;   // "on_device" | "in_cloud" — reported by the SDK, no
 | 2:25–2:40 | Write an answer offline, reconnect | History syncs, "written offline" chip |
 | 2:40–3:00 | Architecture + value proposition | — |
 
+Full step-by-step recording plan, machine setup, evidence capture and troubleshooting: [docs/recording.md](docs/recording.md).
+
 Rule for the recording: **nothing mocked, nothing staged**. If a shot needs a retake, re-run it for real.
 
 ---

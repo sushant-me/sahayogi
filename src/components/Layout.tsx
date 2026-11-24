@@ -36,6 +36,12 @@ export function Layout({
 
   return (
     <div className="min-h-screen bg-bg text-ink">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-accent focus:px-3 focus:py-2 focus:text-[13px] focus:font-medium focus:text-bg"
+      >
+        Skip to content
+      </a>
       <header className="sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
           <div className="flex items-center gap-2.5">
@@ -84,7 +90,7 @@ export function Layout({
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 py-6">{children}</main>
+      <main id="main" className="mx-auto max-w-5xl px-4 py-6">{children}</main>
 
       <footer className="mx-auto max-w-5xl px-4 pb-8 pt-2">
         <p className="text-[11.5px] leading-relaxed text-muted">

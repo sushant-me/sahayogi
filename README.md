@@ -126,12 +126,13 @@ tests/                    129 tests (pure routing, orchestration, UI, persistenc
 scripts/preflight.mjs     live readiness check against the project (npm run preflight)
 docs/architecture.md      sequence + decision diagrams (Mermaid, renders on GitHub)
 docs/verification.md      what was measured, how, and what is still unverified
+docs/recording.md         step-by-step video runbook, with the honesty fallback
 docs/browser-support.md   measured capability matrix (incl. Brave, Chromium)
 SUBMISSION.md             paste-ready Devpost pack + judging-criteria evidence map
 firestore.rules           owner-only access, default deny
 ```
 
-Documentation: [architecture](docs/architecture.md) · [verification log](docs/verification.md) · [browser support](docs/browser-support.md) · [submission pack](SUBMISSION.md)
+Documentation: [architecture](docs/architecture.md) · [verification log](docs/verification.md) · [browser support](docs/browser-support.md) · [recording runbook](docs/recording.md) · [submission pack](SUBMISSION.md)
 
 ---
 
