@@ -172,6 +172,7 @@ src/
 tests/                    173 tests (pure routing, orchestration, UI, persistence)
 scripts/preflight.mjs     live readiness check against the project (npm run preflight)
 scripts/a11y.mjs          structural accessibility audit of the deployed app (npm run a11y)
+scripts/rules-check.mjs   proves the Firestore rules allow the owner and deny everyone else
 docs/architecture.md      sequence + decision diagrams (Mermaid, renders on GitHub)
 docs/verification.md      what was measured, how, and what is still unverified
 docs/recording.md         step-by-step video runbook, with the honesty fallback
@@ -277,6 +278,7 @@ npm run verify  # lint + types + tests + production build, in that order
 npm run deploy  # runs verify first, so a red suite cannot reach Hosting
 npm run preflight # probe the real project: AI Logic, auth, App Check, on-device
 npm run a11y      # structural accessibility audit: every page, desktop + phone width
+FIREBASE_API_KEY=… npm run rules:check  # prove owner-only Firestore rules from outside (allow + deny cases)
 npm run build   # tsc -b + vite build
 ```
 
