@@ -155,7 +155,7 @@ src/
   state/routingLog.ts     prediction-vs-reality ledger
   components/             RouteBadge, TransparencyPanel, DevicePreflight, ErrorBoundary, …
   pages/                  Ask, Quiz, History, Settings, Setup
-tests/                    129 tests (pure routing, orchestration, UI, persistence)
+tests/                    160 tests (pure routing, orchestration, UI, persistence)
 scripts/preflight.mjs     live readiness check against the project (npm run preflight)
 docs/architecture.md      sequence + decision diagrams (Mermaid, renders on GitHub)
 docs/verification.md      what was measured, how, and what is still unverified
@@ -257,7 +257,7 @@ This is documented rather than hidden: the app's failure mode when the weights a
 ## 7. Tests
 
 ```bash
-npm test        # 107 tests, ~1s, no network, no browser, no Firebase project
+npm test        # the whole suite, ~2s, no network, no browser, no Firebase project
 npm run verify  # lint + types + tests + production build, in that order
 npm run preflight # probe the real project: AI Logic, auth, App Check, on-device
 npm run build   # tsc -b + vite build
@@ -311,7 +311,7 @@ What is *not* covered by automated tests, and is verified manually: a real cloud
 
 **New project**, built during the #BuildHybridAI submission period (sprint opened 15 Nov 2026; submission 30 Nov 2026). Not a pre-existing app.
 
-Done: hybrid engine, routing policy + 107 tests (policy, parsing, orchestration, error taxonomy, ledger), four screens, Firestore persistence with offline queue, PWA offline cold start, App Check wiring, Remote Config policy, rules, deploy config, submission pack and docs.
+Done: hybrid engine, routing policy + 160 tests (policy, parsing, orchestration, error taxonomy, ledger, screens), four screens, Firestore persistence with offline queue, PWA offline cold start, App Check wiring, Remote Config policy, rules, deploy config, submission pack and docs.
 Recorded on: Chrome 158 on Windows/macOS (on-device) — see §6 for why the Linux box could not serve the weights.
 
 ### Known limitations
