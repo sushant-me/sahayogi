@@ -28,7 +28,9 @@ Built for **#BuildHybridAI 2026** (Devpost). Web platform (Chrome), Firebase AI 
 5. Bundle: one 1019 kB chunk, served **brotli-compressed at 262 kB** and cached `immutable`; 14 precache
    entries for offline start. Route-splitting was
    tried and reverted — it moved 7 kB because Firebase dominates, and the measurement is recorded.
-6. [docs/demo-day.md](docs/demo-day.md) is the runbook: what to check before recording, and what to say if
+6. On a throttled connection (Slow 3G, cold cache): 262 kB transferred, a static skeleton painted at
+   0.74 s, app interactive at 6.4 s — and 0.34 s on the next visit, served from the service worker.
+7. [docs/demo-day.md](docs/demo-day.md) is the runbook: what to check before recording, and what to say if
    something fails on camera.
 
 The on-device half needs Chrome with the Gemini Nano weights installed; without them the app says
