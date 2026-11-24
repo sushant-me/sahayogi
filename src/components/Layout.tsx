@@ -90,7 +90,17 @@ export function Layout({
         </div>
       </header>
 
-      <main id="main" className="mx-auto max-w-5xl px-4 py-6">{children}</main>
+      <main id="main" className="mx-auto max-w-5xl px-4 py-6">
+        {/*
+          One h1 per page, for document structure and screen-reader navigation. The
+          visual design labels each tile instead of shouting a page title, so the
+          heading is present for assistive tech and visually hidden.
+        */}
+        <h1 className="sr-only">
+          {(NAV.find((entry) => entry.id === page)?.label ?? "Sahayogi") + " — Sahayogi hybrid study assistant"}
+        </h1>
+        {children}
+      </main>
 
       <footer className="mx-auto max-w-5xl px-4 pb-8 pt-2">
         <p className="text-[11.5px] leading-relaxed text-muted">
