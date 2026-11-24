@@ -25,6 +25,7 @@ npm run verify      # lint → types → 130 tests → production build
 | No unused code or type holes | `tsc -b`, `oxlint src` | 0 errors, 0 warnings |
 | The Quiz screen renders cards, prose fallback and exam sections | `npm test` (`QuizPage.test.tsx`, jsdom, 5 cases) | pass |
 | Quiz generates real flashcards through the model | clicked "Flashcards" on the deployed site with sample notes | 8 cards returned, last generation badged `☁️ cloud 6826 ms`, reason `device-not-ready` |
+| A chat and its messages persist to Firestore and come back from it | asked a question on the deployed site, then opened History | chat listed as `synced` with `2 messages`, user + model turns, model turn badged `☁️ cloud 5247 ms`, route mix `☁️ 1`, and **zero** "Database not found" warnings |
 | History works with no authenticated identity | rendered in the browser with auth failing | shows **local only · not synced**, no dead-end screen |
 | Readiness can be checked without guessing | `npm run preflight` | reports config PASS, AI Logic 403 with the exact console step, auth state, App Check mode |
 | The app builds and precaches | `vite build` | 14 precache entries, 1.19 MB |
@@ -88,7 +89,7 @@ per-decision latency and the device string, and enables `Export routing log (JSO
 | Web app registration | `1:508887070917:web:0f5b513056d407471c98ac` (created during this build) |
 | Cloud APIs enabled via the authorized CLI | `firestore`, `identitytoolkit`, `securetoken`, `firebasevertexai`, `firebaseappcheck`, `generativelanguage`, `recaptchaenterprise` |
 | App Check debug token | registered as `sahayogi-dev`, stored in `.env.local` (gitignored) |
-| Firestore | database `default` created, `asia-south1`, `freeTier: true` |
+| Firestore | database `default` created, `asia-south1`, `freeTier: true`; the SDK is pinned to that id via `VITE_FIRESTORE_DATABASE_ID` because the project has no `(default)` database |
 
 The CLI reports Firestore as "API has not been used" while the REST API returns the database list
 successfully with the same credentials; the CLI was attempting to create the *second* database id
@@ -128,6 +129,20 @@ Getting a cloud answer required four distinct things, each of which failed diffe
 
 Fixtures 2 and 3 explain every "permission denied" seen in earlier rounds: enabling a service does not
 create the AI Logic config, and App Check needs an attestation provider, not a debug token.
+
+### Firestore: writes that only ever reached the local cache — **found and fixed**
+
+History showed chats as "synced" and listed them, while every conversation claimed **0 messages**. The
+browser console explained it:
+
+```
+@firebase/firestore: Database '(default)' not found. Please check your project configuration.
+```
+
+The project's database is named `default`; the SDK defaults to `(default)`. Offline persistence made the
+writes *look* successful — they were sitting in the local cache, never on the server. Fixed by passing the
+database id to `initializeFirestore(app, opts, "default")` (configurable via
+`VITE_FIRESTORE_DATABASE_ID`) and by targeting the same id in `firebase.json` so rules deploy to it.
 
 ### The root cause of five rounds of 401s — **found by reading the network tab**
 

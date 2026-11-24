@@ -63,6 +63,15 @@ function readConfig(): FirebaseWebConfig | null {
 export const firebaseWebConfig = readConfig();
 export const isFirebaseConfigured = firebaseWebConfig !== null;
 
+/**
+ * Firestore database id.
+ *
+ * This project's database is named `default`, not the auto-created `(default)`.
+ * Without the explicit id the SDK talks to `(default)`, every write silently lands
+ * in the local cache only, and the console warns "Database '(default)' not found".
+ */
+export const FIRESTORE_DATABASE_ID = (env.VITE_FIRESTORE_DATABASE_ID as string | undefined) || "default";
+
 export const appCheckConfig = {
   siteKey: env.VITE_APP_CHECK_SITE_KEY ?? "",
   /** "enterprise" (default) or "v3" — see README for the billing escape hatch. */
@@ -106,9 +115,11 @@ export function getFirebaseApp(): FirebaseApp {
  */
 export function getDb(): Firestore {
   if (cachedDb) return cachedDb;
-  cachedDb = initializeFirestore(getFirebaseApp(), {
-    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
-  });
+  cachedDb = initializeFirestore(
+    getFirebaseApp(),
+    { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) },
+    FIRESTORE_DATABASE_ID,
+  );
   return cachedDb;
 }
 
