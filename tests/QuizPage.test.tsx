@@ -227,3 +227,47 @@ describe("QuizPage when the page is left mid-retry", () => {
     vi.useRealTimers();
   });
 });
+
+describe("QuizPage when the user moves on during a retry wait", () => {
+  it("does not let the stale retry replace the new request", async () => {
+    vi.useFakeTimers();
+    const mockedRun = vi.mocked(runInference);
+    mockedRun.mockReset();
+    mockedRun
+      .mockRejectedValueOnce({ code: "QUOTA_EXCEEDED", message: "quota", hint: "wait" })
+      .mockResolvedValue({
+        text: "**Q1** What is the site of aerobic respiration?\nANSWER: Mitochondria",
+        predicted: {
+          inferenceMode: "prefer_in_cloud",
+          reason: "heavy-task",
+          degraded: false,
+          explanation: "cloud",
+          diagnostics: { chars: 60, heavyThresholdChars: 800, taskKind: "exam" },
+        },
+        actual: "in_cloud",
+        latencyMs: 300,
+        detectedScript: "latin",
+        fallbackReason: null,
+        modelUsed: "gemini-3.6-flash",
+      } as RunInferenceResult);
+
+    render(<QuizPage />);
+    fireEvent.change(screen.getByLabelText(/study notes/i), {
+      target: { value: "Mitochondria are the site of aerobic respiration in eukaryotic cells." },
+    });
+
+    // flashcards fails and arms a retry
+    fireEvent.click(screen.getByRole("button", { name: /flashcards/i }));
+    await vi.waitFor(() => expect(screen.getByText(/retrying automatically/i)).toBeTruthy());
+
+    // the user gives up on that and asks for an exam instead
+    fireEvent.click(screen.getByRole("button", { name: /10-question exam/i }));
+    await vi.advanceTimersByTimeAsync(1_000);
+    await vi.waitFor(() => expect(mockedRun).toHaveBeenCalledTimes(2));
+
+    // the armed retry must not fire now and overwrite the exam
+    await vi.advanceTimersByTimeAsync(120_000);
+    expect(mockedRun).toHaveBeenCalledTimes(2);
+    vi.useRealTimers();
+  });
+});

@@ -111,7 +111,14 @@ export function QuizPage() {
   async function run(task: TaskKind, isRetry = false) {
     const text = notes.trim();
     if (!text || busy) return;
-    if (!isRetry) retryCountRef.current = 0;
+    if (!isRetry) {
+      // A fresh request means the user has moved on: a retry armed for the previous one
+      // must not fire later and replace what they asked for.
+      if (retryTimerRef.current !== null) window.clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+      setRetrying(null);
+      retryCountRef.current = 0;
+    }
     setBusy(task);
     setElapsedMs(0);
     setFailure(null);
