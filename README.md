@@ -6,6 +6,8 @@ The distinguishing feature is not that it uses AI. It is that **every answer sta
 
 Built for **#BuildHybridAI 2026** (Devpost). Web platform (Chrome), Firebase AI Logic hybrid inference.
 
+**Live:** https://hackthon-dcdf7.web.app · **Project:** `hackthon-dcdf7`
+
 ---
 
 ## 1. The problem

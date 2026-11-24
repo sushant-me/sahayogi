@@ -12,8 +12,8 @@ placeholders once the URL/video/repo exist. Everything else is final.
 | **Project name** | Sahayogi |
 | **Tagline** | A study assistant that tells you where every answer ran — Gemini Nano on-device, cloud when it must. |
 | **Platform selected** | Web (Chrome) |
-| **Hosted URL** | `<<HOSTING_URL>>` |
-| **Repo** | `<<GITHUB_URL>>` (public, Apache-2.0 visible in About) |
+| **Hosted URL** | https://hackthon-dcdf7.web.app |
+| **Repo** | `<<GITHUB_URL>>` (public, Apache-2.0 visible in About) — not pushed yet |
 | **Video** | `<<YOUTUBE_URL>>` (public, ≤ 3 min, English) |
 
 ---

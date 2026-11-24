@@ -79,6 +79,20 @@ The preview badge is dashed and labelled `PREDICTED`; it only becomes solid evid
 With a seeded ledger the panel renders prediction → actual pairs, flags `prediction missed`, shows
 per-decision latency and the device string, and enables `Export routing log (JSON)`.
 
+### Deployment and project wiring — **verified**
+
+| Item | State |
+|---|---|
+| Hosting | **live at https://hackthon-dcdf7.web.app** — 200, correct `<title>`, `/sw.js` served |
+| Web app registration | `1:508887070917:web:0f5b513056d407471c98ac` (created during this build) |
+| Cloud APIs enabled via the authorized CLI | `firestore`, `identitytoolkit`, `securetoken`, `firebasevertexai`, `firebaseappcheck`, `generativelanguage`, `recaptchaenterprise` |
+| App Check debug token | registered as `sahayogi-dev`, stored in `.env.local` (gitignored) |
+| Firestore | database `default` created, `asia-south1`, `freeTier: true` |
+
+The CLI reports Firestore as "API has not been used" while the REST API returns the database list
+successfully with the same credentials; the CLI was attempting to create the *second* database id
+`(default)`, which does require billing. Recorded because it misled me for several minutes.
+
 ### The cloud request genuinely reaches Google — **verified**
 
 Running the app against the real project (web app registered in `hackthon-dcdf7`, config in
@@ -143,7 +157,7 @@ Therefore the on-device demo is recorded on Windows/macOS Chrome. See
 
 | Claim | Status | Blocked on |
 |---|---|---|
-| A cloud request **succeeds**, returning `inferenceSource === "in_cloud"` | **unverified** — request verified as sent and rejected at the service layer | AI Logic must be enabled for the project, which requires accepting the Gemini API Additional Terms of Service (a human consent step) |
+| A cloud request **succeeds**, returning `inferenceSource === "in_cloud"` | **unverified** — the request is now authenticated and no longer 403s, but every model id returns `400 FAILED_PRECONDITION: Firebase AI Logic genai config not found` | The project needs the AI Logic onboarding config, which the console creates through the "Enable API" step that also accepts the Gemini API Additional Terms |
 | Anonymous sign-in works against this project | **unverified** | Authentication is not initialised (`auth/configuration-not-found`); the console offers an Identity Platform upgrade path for it |
 | Firestore writes/reads and the offline queue sync | **unverified** | Firestore database not created yet |
 | Deployed Hosting URL serves the build with correct headers | **unverified** | `firebase deploy` needs an authenticated CLI |
