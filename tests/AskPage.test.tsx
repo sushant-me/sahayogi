@@ -171,3 +171,67 @@ describe("AskPage", () => {
     expect(mockedRun).not.toHaveBeenCalled();
   });
 });
+
+describe("AskPage automatic retry on capacity", () => {
+  it("retries once by itself when the free tier is rate-limiting, and says so", async () => {
+    vi.useFakeTimers();
+    const quotaError = Object.assign(new Error("429 You exceeded your current quota"), {
+      code: "QUOTA_EXCEEDED",
+      hint: "Wait a minute and try again.",
+      retryable: true,
+    });
+
+    mockedRun.mockRejectedValueOnce(quotaError).mockResolvedValueOnce({
+      text: "Answered on the second attempt.",
+      predicted: {
+        inferenceMode: "only_in_cloud",
+        reason: "device-not-ready",
+        degraded: false,
+        explanation: "cloud",
+        diagnostics: { chars: 8, heavyThresholdChars: 800, taskKind: "chat" },
+      },
+      actual: "in_cloud",
+      latencyMs: 500,
+      detectedScript: "latin",
+      fallbackReason: null,
+      modelUsed: "gemini-3.6-flash",
+    } as Awaited<ReturnType<typeof runInference>>);
+
+    renderAsk();
+    fireEvent.change(screen.getByLabelText("Your question"), { target: { value: "Will you retry?" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
+
+    // first attempt fails, the banner appears and the question is not lost
+    await vi.waitFor(() => expect(screen.getByText(/retrying once automatically/i)).toBeTruthy());
+    expect(mockedRun).toHaveBeenCalledTimes(1);
+
+    // after the wait it retries by itself, without the user touching anything
+    await vi.advanceTimersByTimeAsync(21_000);
+    await vi.waitFor(() => expect(mockedRun).toHaveBeenCalledTimes(2));
+    vi.useRealTimers();
+  });
+
+  it("does not retry a second time, so an exhausted quota cannot loop", async () => {
+    vi.useFakeTimers();
+    const quotaError = Object.assign(new Error("429 You exceeded your current quota"), {
+      code: "QUOTA_EXCEEDED",
+      hint: "Wait a minute.",
+      retryable: true,
+    });
+    mockedRun.mockRejectedValue(quotaError);
+
+    renderAsk();
+    fireEvent.change(screen.getByLabelText("Your question"), { target: { value: "Loop?" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
+
+    await vi.waitFor(() => expect(screen.getByText(/retrying once automatically/i)).toBeTruthy());
+    await vi.advanceTimersByTimeAsync(21_000);
+    await vi.waitFor(() => expect(mockedRun).toHaveBeenCalledTimes(2));
+
+    // the second failure is terminal for this question: no third attempt, and a retry control
+    await vi.advanceTimersByTimeAsync(25_000);
+    expect(mockedRun).toHaveBeenCalledTimes(2);
+    await vi.waitFor(() => expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy());
+    vi.useRealTimers();
+  });
+});

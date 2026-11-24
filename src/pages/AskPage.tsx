@@ -95,7 +95,10 @@ export function AskPage() {
   const [sending, setSending] = useState(false);
   const [streamingText, setStreamingText] = useState("");
   const [elapsedMs, setElapsedMs] = useState(0);
+  const [autoRetrying, setAutoRetrying] = useState(false);
   const chatIdRef = useRef<string | null>(null);
+  const autoRetryRef = useRef<number | null>(null);
+  const autoRetriedRef = useRef(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const routingLog = useRoutingLog();
   const summary = useMemo(() => summariseLog(routingLog), [routingLog]);
@@ -164,6 +167,10 @@ export function AskPage() {
     }
   }
 
+  useEffect(() => () => {
+    if (autoRetryRef.current !== null) window.clearTimeout(autoRetryRef.current);
+  }, []);
+
   /** Start a fresh conversation; the previous one is already saved in History. */
   function startNewChat() {
     chatIdRef.current = null;
@@ -172,10 +179,20 @@ export function AskPage() {
     setStreamingText("");
   }
 
-  async function send(raw: string) {
+  function cancelAutoRetry() {
+    if (autoRetryRef.current !== null) window.clearTimeout(autoRetryRef.current);
+    autoRetryRef.current = null;
+    setAutoRetrying(false);
+  }
+
+  async function send(raw: string, isAutoRetry = false) {
     const text = raw.trim();
     if (!text || sending) return;
 
+    // A fresh question earns a fresh automatic retry; the retry's own call must not.
+    if (!isAutoRetry) autoRetriedRef.current = false;
+
+    cancelAutoRetry();
     setSending(true);
     setInput("");
     clearDraft("ask-input");
@@ -236,6 +253,29 @@ export function AskPage() {
       });
     } catch (error) {
       const appErr = error as AppError;
+      const capacity = appErr.code === "QUOTA_EXCEEDED" || appErr.code === "MODEL_OVERLOADED";
+
+      // Free-tier quota is metered per minute and per model, so a capacity failure is
+      // often transient. Retry once automatically after a short, visible wait — and only
+      // once, so a genuinely exhausted quota cannot turn into a loop.
+      if (capacity && !autoRetriedRef.current) {
+        autoRetriedRef.current = true;
+        setSending(false);
+        setStreamingText("");
+        setAutoRetrying(true);
+        pushToast({
+          kind: "info",
+          message: "The free tier is rate-limiting requests. Retrying once automatically…",
+          hint: "You can cancel; the question is kept.",
+        });
+        autoRetryRef.current = window.setTimeout(() => {
+          autoRetryRef.current = null;
+          setAutoRetrying(false);
+          void send(text, true);
+        }, 20_000);
+        return;
+      }
+
       pushToast({ kind: "error", message: appErr.message || "Inference failed.", hint: appErr.hint });
       setTurns((current) => [
         ...current,
@@ -360,6 +400,16 @@ export function AskPage() {
             </div>
 
             <div className="border-t border-line/70 px-4 pb-4 pt-3">
+              {autoRetrying ? (
+                <div className="mb-2 flex flex-wrap items-center gap-2 rounded-lg border border-warn/40 bg-warn/10 px-3 py-2">
+                  <span className="text-[11.5px] text-warn">
+                    Rate-limited by the free tier — retrying once automatically in a few seconds.
+                  </span>
+                  <Button variant="ghost" onClick={cancelAutoRetry}>
+                    Cancel
+                  </Button>
+                </div>
+              ) : null}
               {preview ? (
                 <div className="mb-2 flex flex-wrap items-center gap-2">
                   <RouteBadge predictedMode={preview.inferenceMode} actual={null} compact variant="preview" />
