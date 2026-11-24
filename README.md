@@ -350,7 +350,7 @@ Recorded on: Chrome 158 on Windows/macOS (on-device) — see §6 for why the Lin
 - Devanagari detection is script-based, not language-based. That is a deliberate choice: guessing language from script is wrong more often than the SDK's own negotiation.
 - Flashcard JSON is parsed leniently rather than constrained, because on-device structured output is not reliable across model versions. The raw answer is shown if parsing fails instead of discarding it.
 - The bundle ships Firebase whole: 1019 kB minified, 303 kB gzipped, **262 kB brotli as actually served**,
-  precached as 1234 KiB, so the first load costs a few seconds on a poor connection (measured at 6.4 s to
+  precached as 1051 KiB across 9 entries, so the first load costs a few seconds on a poor connection (measured at 6.4 s to
   interactive on Slow 3G; 0.34 s on the next visit). Route-level splitting was tried and moved ~7 kB, so the
   honest next step is deferring `firebase/ai` off the cold start — see `docs/verification.md`.
 - The service worker caches the shell only. A browser that has never loaded the app online cannot start

@@ -14,7 +14,6 @@ export default defineConfig({
       // "prompt", not "autoUpdate": an open tab must not keep running the previous
       // build without saying so. UpdateBanner surfaces the swap.
       registerType: "prompt",
-      includeAssets: ["favicon.svg", "icons/*.png"],
       devOptions: { enabled: false },
       manifest: {
         name: "Sahayogi — hybrid study assistant",
@@ -38,7 +37,9 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
+        // png is deliberately absent: vite-plugin-pwa already adds the manifest icons, and
+        // matching them here as well listed every icon twice in the precache manifest.
+        globPatterns: ["**/*.{js,css,html,svg,woff2}"],
         // og-image.png exists for link previews in chat apps, not for the app to run.
         // Precaching it would make every visitor download ~400 kB they never use, which
         // directly contradicts the whole point of a small offline-first shell.
