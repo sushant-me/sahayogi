@@ -123,12 +123,13 @@ src/
   components/             RouteBadge, TransparencyPanel, DevicePreflight, ErrorBoundary, …
   pages/                  Ask, Quiz, History, Settings, Setup
 tests/                    72 unit tests over the pure layer
+docs/architecture.md      sequence + decision diagrams (Mermaid, renders on GitHub)
 docs/browser-support.md   measured capability matrix (incl. Brave, Chromium)
 SUBMISSION.md             paste-ready Devpost pack + judging-criteria evidence map
 firestore.rules           owner-only access, default deny
 ```
 
-Documentation: [browser support](docs/browser-support.md) · [submission pack](SUBMISSION.md)
+Documentation: [architecture](docs/architecture.md) · [browser support](docs/browser-support.md) · [submission pack](SUBMISSION.md)
 
 ---
 

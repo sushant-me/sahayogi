@@ -1,5 +1,7 @@
 /** One chat turn, with the routing evidence attached to model answers. */
 
+import { useState } from "react";
+
 import type { InferenceMode, InferenceSource, RouteReason } from "../ai/policy";
 import { RouteBadge } from "./RouteBadge";
 
@@ -47,7 +49,7 @@ export function ChatMessage({
 
   return (
     <div className="flex justify-start">
-      <div className="w-full max-w-[92%] rounded-2xl rounded-bl-md border border-line bg-panel px-4 py-3">
+      <div className="group w-full max-w-[92%] rounded-2xl rounded-bl-md border border-line bg-panel px-4 py-3">
         <div className="mb-2 flex flex-wrap items-center gap-2">
           <RouteBadge
             predictedMode={predictedMode}
@@ -64,7 +66,40 @@ export function ChatMessage({
           {streaming ? <span className="text-[11px] text-accent">streaming…</span> : null}
         </div>
         <div className="whitespace-pre-wrap text-[13.5px] leading-relaxed text-ink">{text}</div>
+
+        {!streaming && text ? (
+          <div className="mt-2 flex justify-end">
+            <CopyButton text={text} />
+          </div>
+        ) : null}
       </div>
     </div>
+  );
+}
+
+/** Copies the answer. Silent no-op where the clipboard API is unavailable. */
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // Clipboard blocked (permissions/insecure context): leave the UI unchanged
+      // rather than claiming success.
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => void copy()}
+      className="rounded px-1.5 py-0.5 text-[11px] text-muted opacity-0 transition-opacity hover:text-ink focus-visible:opacity-100 group-hover:opacity-100"
+      aria-label={copied ? "Copied" : "Copy answer"}
+    >
+      {copied ? "copied" : "copy"}
+    </button>
   );
 }
