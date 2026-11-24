@@ -4,6 +4,10 @@
 
 The distinguishing feature is not that it uses AI. It is that **every answer states where it was computed, and the app records whether its own prediction was right.**
 
+[![CI](https://github.com/sushant-me/sahayogi/actions/workflows/ci.yml/badge.svg)](https://github.com/sushant-me/sahayogi/actions/workflows/ci.yml)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![Live](https://img.shields.io/badge/live-hackthon--dcdf7.web.app-3fb950.svg)](https://hackthon-dcdf7.web.app)
+
 Built for **#BuildHybridAI 2026** (Devpost). Web platform (Chrome), Firebase AI Logic hybrid inference.
 
 ### For judges — a two-minute path
