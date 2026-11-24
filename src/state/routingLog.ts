@@ -6,6 +6,7 @@
  * Persisted to localStorage so the panel survives a reload during a demo.
  */
 
+import { getStorage, readString, writeJSON } from "../lib/storage";
 import { useSyncExternalStore } from "react";
 
 import type { InferenceMode, InferenceSource, RouteReason, TaskKind } from "../ai/policy";
@@ -34,7 +35,7 @@ type Listener = () => void;
 const listeners = new Set<Listener>();
 
 /** Storage is browser-only; Node (tests, SSR) must never touch it. */
-const hasBrowserStorage = typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+const hasBrowserStorage = () => getStorage() !== null;
 
 function isRow(value: unknown): value is RoutingLogRow {
   if (!value || typeof value !== "object") return false;
@@ -44,7 +45,7 @@ function isRow(value: unknown): value is RoutingLogRow {
 
 function load(): RoutingLogRow[] {
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = readString(STORAGE_KEY);
     if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
@@ -54,12 +55,12 @@ function load(): RoutingLogRow[] {
   }
 }
 
-let rows: RoutingLogRow[] = hasBrowserStorage ? load() : [];
+let rows: RoutingLogRow[] = hasBrowserStorage() ? load() : [];
 
 function persist(): void {
-  if (!hasBrowserStorage) return;
+  if (!hasBrowserStorage()) return;
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
+    writeJSON(STORAGE_KEY, rows);
   } catch {
     // Storage full or blocked: the in-memory log still works for this session.
   }

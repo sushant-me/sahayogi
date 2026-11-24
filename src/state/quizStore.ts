@@ -7,6 +7,7 @@
  * that evidence is part of the result, not decoration.
  */
 
+import { getStorage, readString, removeKey, writeJSON } from "../lib/storage";
 import type { Flashcard } from "../ai/prompts";
 import type { InferenceMode, InferenceSource, RouteReason, TaskKind } from "../ai/policy";
 
@@ -29,13 +30,13 @@ export interface QuizSnapshot {
 }
 
 function available(): boolean {
-  return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+  return getStorage() !== null;
 }
 
 export function readQuizSnapshot(): QuizSnapshot | null {
   if (!available()) return null;
   try {
-    const raw = window.localStorage.getItem(KEY);
+    const raw = readString(KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as QuizSnapshot;
     // Guard against a shape from an older build rather than crashing the page.
@@ -49,7 +50,7 @@ export function readQuizSnapshot(): QuizSnapshot | null {
 export function writeQuizSnapshot(snapshot: Omit<QuizSnapshot, "at">): void {
   if (!available()) return;
   try {
-    window.localStorage.setItem(KEY, JSON.stringify({ ...snapshot, at: Date.now() }));
+    writeJSON(KEY, { ...snapshot, at: Date.now() });
   } catch {
     /* quota or private mode: losing the restore is better than breaking generation */
   }
@@ -58,7 +59,7 @@ export function writeQuizSnapshot(snapshot: Omit<QuizSnapshot, "at">): void {
 export function clearQuizSnapshot(): void {
   if (!available()) return;
   try {
-    window.localStorage.removeItem(KEY);
+    removeKey(KEY);
   } catch {
     /* ignore */
   }

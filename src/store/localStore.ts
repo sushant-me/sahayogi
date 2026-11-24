@@ -9,12 +9,14 @@
  * not synced". Nothing is pretending to be in the cloud.
  */
 
+import { getStorage, readString, writeJSON } from "../lib/storage";
 import type { AppendMessageInput, StoredChat, StoredMessage } from "./chatStore";
 
 const CHATS_KEY = "sahayogi.local.chats";
 const MESSAGES_KEY = "sahayogi.local.messages";
 
-const hasStorage = typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+// Storage may be absent *or* refuse access with a throwing getter; getStorage handles both.
+const hasStorage = () => getStorage() !== null;
 const listeners = new Set<() => void>();
 
 function emit(): void {
@@ -22,9 +24,9 @@ function emit(): void {
 }
 
 function read<T>(key: string, fallback: T): T {
-  if (!hasStorage) return fallback;
+  if (!hasStorage()) return fallback;
   try {
-    const raw = window.localStorage.getItem(key);
+    const raw = readString(key);
     if (!raw) return fallback;
     return JSON.parse(raw) as T;
   } catch {
@@ -33,9 +35,9 @@ function read<T>(key: string, fallback: T): T {
 }
 
 function write(key: string, value: unknown): void {
-  if (!hasStorage) return;
+  if (!hasStorage()) return;
   try {
-    window.localStorage.setItem(key, JSON.stringify(value));
+    writeJSON(key, value);
   } catch {
     // Quota exceeded or storage blocked: history silently stops growing rather
     // than breaking the screen the user is on.

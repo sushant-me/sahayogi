@@ -8,16 +8,18 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import { getStorage, readString, removeKey, writeString } from "../lib/storage";
+
 const PREFIX = "sahayogi.draft.";
 
 function available(): boolean {
-  return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+  return getStorage() !== null;
 }
 
 export function readDraft(key: string): string {
   if (!available()) return "";
   try {
-    return window.localStorage.getItem(PREFIX + key) ?? "";
+    return readString(PREFIX + key) ?? "";
   } catch {
     return "";
   }
@@ -26,8 +28,8 @@ export function readDraft(key: string): string {
 export function writeDraft(key: string, value: string): void {
   if (!available()) return;
   try {
-    if (value) window.localStorage.setItem(PREFIX + key, value);
-    else window.localStorage.removeItem(PREFIX + key);
+    if (value) writeString(PREFIX + key, value);
+    else removeKey(PREFIX + key);
   } catch {
     /* quota or private mode: a lost draft is not worth breaking the page for */
   }

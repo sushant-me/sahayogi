@@ -13,6 +13,7 @@ import type { DeviceAvailability, RoutingPolicy, UserMode } from "../ai/policy";
 import { DEFAULT_POLICY, parsePolicy } from "../ai/policy";
 import { SYSTEM_INSTRUCTION } from "../ai/prompts";
 import { getAiLogic } from "../firebase/ai";
+import { readString, writeString } from "../lib/storage";
 import {
   configDiagnostics,
   ensureAnonymousUser,
@@ -32,7 +33,7 @@ const USER_MODE_KEY = "sahayogi.userMode";
 
 function readStoredMode(): UserMode {
   try {
-    const raw = localStorage.getItem(USER_MODE_KEY);
+    const raw = readString(USER_MODE_KEY);
     if (raw === "auto" || raw === "on-device" || raw === "cloud") return raw;
   } catch {
     // localStorage can be unavailable in private mode; default is fine.
@@ -74,7 +75,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const setUserMode = useCallback((mode: UserMode) => {
     setUserModeState(mode);
     try {
-      localStorage.setItem(USER_MODE_KEY, mode);
+      writeString(USER_MODE_KEY, mode);
     } catch {
       // Non-fatal: the in-memory value still applies for this session.
     }
