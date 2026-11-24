@@ -17,7 +17,8 @@ import type { InferenceMode, InferenceSource, TaskKind } from "../ai/policy";
 import { decideRoute } from "../ai/policy";
 import type { Flashcard } from "../ai/prompts";
 import { RouteBadge } from "../components/RouteBadge";
-import { Button, Chip, EmptyState, Panel, SectionHeading } from "../components/ui";
+import { BentoCard, BentoGrid } from "../components/bento";
+import { Button, Chip } from "../components/ui";
 import { useApp } from "../state/appContext";
 import { logRoute } from "../state/routingLog";
 
@@ -122,12 +123,13 @@ export function QuizPage() {
   const examSections = exam ? splitMarkdownSections(exam) : [];
 
   return (
-    <div className="space-y-4">
-      <Panel className="p-5">
-        <SectionHeading
-          title="Notes in, recall out"
-          hint="Paste lecture notes or a textbook paragraph. Flashcards are light enough to run on this device; a full practice exam prefers the cloud model."
-        />
+    <div className="space-y-3">
+      <BentoGrid>
+      <BentoCard span="lg:col-span-7 sm:col-span-6" label="Study notes">
+        <p className="mb-3 text-[12px] leading-relaxed text-muted">
+          Paste lecture notes or a textbook paragraph. Flashcards are light enough to run on this device; a full
+          practice exam prefers the cloud model.
+        </p>
 
         <textarea
           value={notes}
@@ -159,19 +161,34 @@ export function QuizPage() {
           </div>
         </div>
 
-        {notes.trim() ? (
-          <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-line bg-panel-2/50 px-3 py-2">
-            <span className="text-[11.5px] text-muted">Predicted routes</span>
+      </BentoCard>
+
+      <BentoCard span="lg:col-span-5 sm:col-span-6" label="Predicted routes" accent="cloud">
+        <p className="mb-3 text-[12px] leading-relaxed text-muted">
+          Flashcards are light enough to stay on the device; a full exam prefers the cloud model. Neither button
+          promises a route — both report the one that actually ran.
+        </p>
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between border-b border-line/50 py-1.5">
+            <span className="text-[11.5px] text-muted">flashcards</span>
             <Chip tone={expected.flashcards.inferenceMode === "only_in_cloud" ? "cloud" : "device"}>
-              flashcards → {expected.flashcards.inferenceMode === "only_in_cloud" ? "cloud" : "on-device"}
+              {expected.flashcards.inferenceMode === "only_in_cloud" ? "cloud" : "on-device"}
             </Chip>
-            <Chip tone="cloud">
-              exam → {expected.exam.inferenceMode === "only_in_cloud" || expected.exam.inferenceMode === "prefer_in_cloud" ? "cloud" : "on-device"}
-            </Chip>
-            {expected.exam.degraded ? <Chip tone="warn">offline: exam runs on-device with reduced quality</Chip> : null}
           </div>
-        ) : null}
-      </Panel>
+          <div className="flex items-center justify-between border-b border-line/50 py-1.5">
+            <span className="text-[11.5px] text-muted">10-question exam</span>
+            <Chip tone="cloud">
+              {expected.exam.inferenceMode === "only_in_cloud" || expected.exam.inferenceMode === "prefer_in_cloud" ? "cloud" : "on-device"}
+            </Chip>
+          </div>
+          <div className="flex items-center justify-between py-1.5">
+            <span className="text-[11.5px] text-muted">characters</span>
+            <span className="text-[11.5px] tabular-nums text-ink">{notes.trim().length}</span>
+          </div>
+        </div>
+        {expected.exam.degraded ? <Chip tone="warn">offline: exam runs on-device with reduced quality</Chip> : null}
+      </BentoCard>
+      </BentoGrid>
 
       {meta ? (
         <div className="flex flex-wrap items-center gap-2 px-1">
@@ -182,8 +199,7 @@ export function QuizPage() {
       ) : null}
 
       {cards && cards.length > 0 ? (
-        <Panel className="p-5">
-          <SectionHeading title={`${cards.length} flashcards`} hint="Click a card to reveal the answer. Test yourself before flipping." />
+        <BentoCard span="lg:col-span-12 sm:col-span-6" label={`${cards.length} flashcards`} meta={<span>click to reveal</span>}>
           <div className="grid gap-3 sm:grid-cols-2">
             {cards.map((card, index) => {
               const isRevealed = revealed.has(index);
@@ -206,22 +222,20 @@ export function QuizPage() {
               );
             })}
           </div>
-        </Panel>
+        </BentoCard>
       ) : null}
 
       {rawFallback ? (
-        <Panel className="p-5">
-          <SectionHeading
-            title="Model returned prose, not JSON"
-            hint="On-device models do not always honour structured output. The raw answer is shown rather than discarded."
-          />
+        <BentoCard span="lg:col-span-12 sm:col-span-6" label="Model returned prose, not JSON">
+          <p className="mb-2 text-[11.5px] leading-relaxed text-muted">
+            On-device models do not always honour structured output. The raw answer is shown rather than discarded.
+          </p>
           <pre className="whitespace-pre-wrap text-[13px] leading-relaxed text-ink">{rawFallback}</pre>
-        </Panel>
+        </BentoCard>
       ) : null}
 
       {exam ? (
-        <Panel className="p-5">
-          <SectionHeading title="Practice exam" hint="Answer first, then check the key at the bottom." />
+        <BentoCard span="lg:col-span-12 sm:col-span-6" label="Practice exam">
           <div className="space-y-4">
             {examSections.length > 0 ? (
               examSections.map((section, index) => (
@@ -236,14 +250,16 @@ export function QuizPage() {
               <pre className="whitespace-pre-wrap text-[13px] leading-relaxed text-ink">{exam}</pre>
             )}
           </div>
-        </Panel>
+        </BentoCard>
       ) : null}
 
       {!cards && !exam && !rawFallback && busy === null ? (
-        <EmptyState
-          title="No material generated yet"
-          body="Paste notes above. Flashcards usually run on-device; the exam usually goes to the cloud. The badge after generation tells you which actually happened."
-        />
+        <BentoCard span="lg:col-span-12 sm:col-span-6" label="Nothing generated yet">
+          <p className="text-[12px] leading-relaxed text-muted">
+            Paste notes above. Flashcards usually run on-device; the exam usually goes to the cloud. The badge after
+            generation tells you which actually happened.
+          </p>
+        </BentoCard>
       ) : null}
     </div>
   );

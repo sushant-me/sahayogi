@@ -181,7 +181,9 @@ export async function runInference(input: RunInferenceInput): Promise<RunInferen
         return { attempt, model };
       } catch (error) {
         const code = classifyError(error).code;
-        if (code === "MODEL_OVERLOADED" || code === "MODEL_NOT_FOUND") {
+        // Quota is usually metered per model, so a saturated primary does not mean
+        // the whole chain is exhausted — try the next one before giving up.
+        if (code === "MODEL_OVERLOADED" || code === "MODEL_NOT_FOUND" || code === "QUOTA_EXCEEDED") {
           lastError = error;
           continue;
         }

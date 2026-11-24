@@ -9,7 +9,8 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { RouteBadge } from "../components/RouteBadge";
-import { Button, Chip, EmptyState, Panel, SectionHeading } from "../components/ui";
+import { BentoCard, BentoGrid } from "../components/bento";
+import { Button, Chip } from "../components/ui";
 import type { InferenceMode } from "../ai/policy";
 import { useApp } from "../state/appContext";
 import type { StoredChat, StoredMessage } from "../store/chatStore";
@@ -73,24 +74,25 @@ export function HistoryPage() {
   }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[300px_1fr]">
-      <Panel className="p-4">
-        <SectionHeading
-          title="Chats"
-          hint={
-            mode === "local"
-              ? "Stored in this browser only — sign-in is unavailable, so history is not synced."
-              : online
-                ? "Synced with Firestore."
-                : "Read from the on-device cache; writes are queued."
-          }
-          right={
-            <div className="flex items-center gap-1.5">
-              <Chip tone={mode === "local" ? "warn" : "device"}>{mode === "local" ? "local only" : "synced"}</Chip>
-              <Chip tone={online ? "neutral" : "warn"}>{chats.length}</Chip>
-            </div>
-          }
-        />
+    <BentoGrid>
+      <BentoCard
+        span="lg:col-span-4 sm:col-span-6"
+        label="Chats"
+        meta={
+          <div className="flex items-center gap-1.5">
+            <Chip tone={mode === "local" ? "warn" : "device"}>{mode === "local" ? "local only" : "synced"}</Chip>
+            <Chip tone="neutral">{chats.length}</Chip>
+          </div>
+        }
+        accent={mode === "local" ? "warn" : "device"}
+      >
+        <p className="mb-2 text-[11px] leading-relaxed text-muted">
+          {mode === "local"
+            ? "Stored in this browser only — sign-in is unavailable, so history is not synced."
+            : online
+              ? "Synced with Firestore."
+              : "Read from the on-device cache; writes are queued."}
+        </p>
 
         {chats.length === 0 ? (
           <p className="px-1 text-[12.5px] leading-relaxed text-muted">
@@ -124,9 +126,10 @@ export function HistoryPage() {
             })}
           </ul>
         )}
-      </Panel>
+      </BentoCard>
 
-      <Panel className="p-4">
+      <BentoCard span="lg:col-span-8 sm:col-span-6" label="Conversation" flush>
+        <div className="px-4 pb-4">
         {error ? (
           <p className="mb-3 rounded-lg border border-danger/30 bg-danger/[0.06] px-3 py-2 text-[12px] text-danger">
             {error}
@@ -179,12 +182,15 @@ export function HistoryPage() {
             )}
           </>
         ) : (
-          <EmptyState
-            title="Select a chat"
-            body="Pick a conversation on the left to read it. Stored messages keep the routing evidence that was captured when they were generated."
-          />
+          <div className="rounded-xl border border-dashed border-line/70 px-6 py-12 text-center">
+            <p className="text-[13px] font-medium text-ink">Select a chat</p>
+            <p className="mx-auto mt-1.5 max-w-sm text-[12px] leading-relaxed text-muted">
+              Stored messages keep the routing evidence captured when they were generated.
+            </p>
+          </div>
         )}
-      </Panel>
-    </div>
+        </div>
+      </BentoCard>
+    </BentoGrid>
   );
 }

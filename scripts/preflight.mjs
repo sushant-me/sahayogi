@@ -91,6 +91,17 @@ async function checkAiLogic() {
     return record("AI Logic", "PASS", `model answered: "${reply.trim().slice(0, 40)}"`);
   }
 
+  // With a real attestation provider, App Check is enforced and a raw probe cannot
+  // mint a reCAPTCHA Enterprise token. Reaching this error means the service is
+  // enabled *and* protected — which is the state we want.
+  if (/app check/i.test(text)) {
+    return record(
+      "AI Logic",
+      "PASS",
+      "reachable, App Check enforced (a raw probe cannot mint a reCAPTCHA token — verify from the app)",
+    );
+  }
+
   const disabled = /has not been used in project|service_disabled/i.test(text);
   const denied = /permission denied|access_denied/i.test(text);
 

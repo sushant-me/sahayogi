@@ -7,7 +7,8 @@
  */
 
 import { useApp } from "../state/appContext";
-import { Button, Chip, Panel } from "./ui";
+import { BentoCard } from "./bento";
+import { Button, Chip } from "./ui";
 
 const AVAILABILITY_COPY: Record<string, { label: string; tone: "neutral" | "device" | "warn" | "cloud" | "danger"; body: string }> = {
   available: {
@@ -44,7 +45,12 @@ export function DevicePreflight() {
   const percent = preflight.progress !== null ? Math.round(preflight.progress * 100) : null;
 
   return (
-    <Panel className="p-4">
+    <BentoCard
+      span=""
+      label="On-device model"
+      accent={copy.tone === "device" ? "device" : copy.tone === "warn" ? "warn" : "danger"}
+      meta={<Chip tone={copy.tone}>{deviceChecking ? "checking" : copy.label}</Chip>}
+    >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <span className="text-[13px] font-medium text-ink">On-device model</span>
@@ -74,7 +80,7 @@ export function DevicePreflight() {
         </div>
       </div>
 
-      <p className="mt-2 text-[12.5px] leading-relaxed text-muted">{copy.body}</p>
+      <p className="mt-1 text-[12px] leading-relaxed text-muted">{copy.body}</p>
 
       {preflight.running ? (
         <div className="mt-3">
@@ -93,6 +99,6 @@ export function DevicePreflight() {
       {preflight.message && !preflight.running ? (
         <p className="mt-2 text-[12px] text-muted">{preflight.message}</p>
       ) : null}
-    </Panel>
+    </BentoCard>
   );
 }
