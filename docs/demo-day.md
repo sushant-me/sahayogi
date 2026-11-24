@@ -71,6 +71,38 @@ Full shot list and read-aloud narration: [docs/recording.md](recording.md). Shor
 
 ---
 
+## If the cloud quota is exhausted
+
+The free tier can be out of credits at exactly the wrong time — it happened repeatedly while this
+project was being built. The demo does **not** need a cloud call to make its point, because the
+router's decision is visible *before* anything is sent and the ledger records failures honestly.
+
+A complete two-and-a-half-minute demo with **no cloud answer at all**.
+
+**Precondition:** the weights must be installed, because the preview's reasons depend on it. Checked on a
+machine *without* them: every preview — short English, Nepali, long notes — says the same thing,
+*"The on-device model is not downloaded yet, so this runs in the cloud"*, because that rule is evaluated
+before the language and length rules. With the weights installed the reasons differentiate as below.
+
+| Shot | Why it still proves the claim |
+|---|---|
+| Type a short English question, **do not send** | the Route preview shows the decision and the reason while you type — routed on-device, no request made |
+| Send it (on-device answers this) | ⚡ badge with latency; nothing left the machine |
+| Turn the network off, ask again | still answers, and the header says `offline` |
+| Type a Nepali question, **do not send** | with the weights installed, preview switches to ☁️ cloud with *this language is cloud-only* — the limitation is shown, not hit. Without them it says *model not downloaded*, which is honest but does not demonstrate the language rule |
+| Paste long notes, **do not send** | with the weights installed, preview flips to cloud with *over the length threshold*; the threshold is the Remote Config value |
+| Settings → Transparency | the ledger, including any **failed attempts** with their error codes; export it as JSON |
+| Settings → Run self-check | config, auth, App Check, Firestore round-trip all pass without spending quota |
+| Quiz → Flashcards (with the weights installed) | flashcards are the light task, so they run on-device |
+| Code: `src/ai/engine.ts` | the `inferenceSource` capture that makes every claim checkable |
+
+Say it out loud: *"the cloud tier is out of credits right now — which is exactly the situation this
+app is built for, so here is the routing decision without the call, and here is the ledger recording
+that the attempt failed rather than pretending it succeeded."*
+
+That is a stronger demo than a working cloud call, because it shows the design under the condition
+the design exists for.
+
 ## If something goes wrong on camera
 
 Say what happened and keep going — the project's whole argument is that it reports the
