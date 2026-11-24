@@ -342,7 +342,11 @@ export function AskPage() {
                       role="model"
                       text={streamingText || "Thinking…"}
                       statusSuffix={
-                        !streamingText && elapsedMs > 1200 ? `${Math.floor(elapsedMs / 1000)}s` : null
+                        !streamingText && elapsedMs > 1200
+                          ? elapsedMs > 25_000
+                            ? `${Math.floor(elapsedMs / 1000)}s · the free tier can take up to a minute`
+                            : `${Math.floor(elapsedMs / 1000)}s`
+                          : null
                       }
                       predictedMode={preview?.inferenceMode ?? null}
                       actual={null}
