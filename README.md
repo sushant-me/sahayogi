@@ -152,13 +152,13 @@ Documentation: [architecture](docs/architecture.md) · [verification log](docs/v
 2. **Authentication** → Sign-in method → **Anonymous** → Enable.
 3. **Firestore** → Create database → Production mode → `asia-south1` (closest to Nepal).
 4. **App Check** → register the **Web** app → reCAPTCHA Enterprise site key. Add `localhost` and your Hosting domain.
-5. **AI Logic** → enable. Confirm which cloud model id your project exposes and put it in the policy (default `gemini-2.5-flash`).
+5. **AI Logic** → enable. Confirm which cloud model id your project exposes and put it in the policy (default `gemini-3.8-flash`).
 6. **Remote Config** → create parameter `routing_policy`, type JSON:
 
 ```json
 {
   "heavyThresholdChars": 800,
-  "cloudModel": "gemini-2.5-flash",
+  "cloudModel": "gemini-3.8-flash",
   "preferCloudForTasks": ["exam", "long-summary"],
   "onDeviceLanguages": ["en", "ja", "es", "de", "fr"],
   "onDeviceEnabled": true

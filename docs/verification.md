@@ -99,7 +99,7 @@ Running the app against the real project (web app registered in `hackthon-dcdf7`
 `.env.local`) produced an actual server response rather than a client-side failure:
 
 ```
-POST https://firebasevertexai.googleapis.com/v1beta/projects/hackthon-dcdf7/models/gemini-2.5-flash:streamGenerateContent?alt=sse
+POST https://firebasevertexai.googleapis.com/v1beta/projects/hackthon-dcdf7/models/gemini-3.8-flash:streamGenerateContent?alt=sse
 → 403 ACCESS_DENIED  "Permission denied on the service."
 ```
 
@@ -107,6 +107,25 @@ What that proves: the web config is valid, the hybrid model object initialised, 
 cloud path, requests are not blocked by App Check or CORS, and the failing layer is **Google-side API
 enablement** — i.e. AI Logic has not been enabled for the project yet. The error is surfaced to the user
 as `PERMISSION_DENIED` with that exact remedy, not as "check your connection".
+
+### The AI Logic onboarding chain, as it actually behaved — **verified**
+
+Getting a cloud answer required four distinct things, each of which failed differently:
+
+1. **Service enabled** — `firebasevertexai.googleapis.com` was `SERVICE_DISABLED`. Enabled through the
+   user's own OAuth grant via the Service Usage API.
+2. **AI Logic genai config** — `400 FAILED_PRECONDITION: Firebase AI Logic genai config not found`. This is
+   *not* created by enabling the API. It required the console wizard, which refuses to finish until
+   step 3: **"You must register your app with App Check using one of the supported attestation providers."**
+3. **App Check with a real provider** — a registered *debug token* was not enough for the wizard. A
+   reCAPTCHA Enterprise key was created for `hackthon-dcdf7.web.app` / `localhost` and registered as the
+   app's `recaptchaEnterpriseConfig`; only then did the wizard complete.
+4. **Model id** — `gemini-2.5-flash` returns `404 … no longer available to new users. Please update your
+   code to use models/gemini-3.8-flash`. The default is now `gemini-3.8-flash`, plus a fallback chain that
+   walks alternatives on `MODEL_NOT_FOUND` / `MODEL_OVERLOADED`.
+
+Fixtures 2 and 3 explain every "permission denied" seen in earlier rounds: enabling a service does not
+create the AI Logic config, and App Check needs an attestation provider, not a debug token.
 
 ### A hang found by running it, not by reading it — **found and fixed**
 
@@ -157,7 +176,7 @@ Therefore the on-device demo is recorded on Windows/macOS Chrome. See
 
 | Claim | Status | Blocked on |
 |---|---|---|
-| A cloud request **succeeds**, returning `inferenceSource === "in_cloud"` | **unverified** — the request is now authenticated and no longer 403s, but every model id returns `400 FAILED_PRECONDITION: Firebase AI Logic genai config not found` | The project needs the AI Logic onboarding config, which the console creates through the "Enable API" step that also accepts the Gemini API Additional Terms |
+| A cloud request **succeeds**, returning `inferenceSource === "in_cloud"` | **transport verified, blocked on quota** — App Check, auth and model routing all work; the last live attempt reached a valid model and returned `429 You exceeded your current quota`, and `gemini-3.8-flash` returned `500 high demand` | Free-tier quota to reset, or billing enabled |
 | Anonymous sign-in works against this project | **unverified** | Authentication is not initialised (`auth/configuration-not-found`); the console offers an Identity Platform upgrade path for it |
 | Firestore writes/reads and the offline queue sync | **unverified** | Firestore database not created yet |
 | Deployed Hosting URL serves the build with correct headers | **unverified** | `firebase deploy` needs an authenticated CLI |

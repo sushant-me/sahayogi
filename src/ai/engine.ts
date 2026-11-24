@@ -31,6 +31,7 @@ import { SYSTEM_INSTRUCTION, taskPrompt } from "./prompts";
  */
 const DEFAULT_DEVICE_CALL_TIMEOUT_MS = 12_000;
 
+
 const DEVICE_TIMEOUT_CODE = "device-timeout";
 
 export interface RunInferenceInput {
@@ -55,6 +56,8 @@ export interface RunInferenceResult {
   detectedScript: string | null;
   /** Set when we had to fall back after the device failed to answer in time. */
   fallbackReason: "device-timeout" | null;
+  /** Which cloud model answered, when the cloud was used. */
+  modelUsed: string | null;
 }
 
 interface Attempt {
@@ -131,12 +134,8 @@ export async function runInference(input: RunInferenceInput): Promise<RunInferen
 
   const prompt = taskPrompt(input.taskKind, input.text);
 
-  const execute = async (mode: InferenceMode): Promise<Attempt> => {
-    const model = buildModel({
-      mode,
-      cloudModel: input.policy.cloudModel,
-      systemInstruction,
-    });
+  const execute = async (mode: InferenceMode, cloudModel: string): Promise<Attempt> => {
+    const model = buildModel({ mode, cloudModel, systemInstruction });
 
     const devicePath = mode === "prefer_on_device" || mode === "only_on_device";
     const pending = model.generateContentStream(prompt);
@@ -164,14 +163,49 @@ export async function runInference(input: RunInferenceInput): Promise<RunInferen
     };
   };
 
+  /**
+   * Cloud models get retired ("no longer available to new users") and saturated
+   * ("high demand"). Rather than surfacing either as a dead end, walk the policy's
+   * fallback chain, trying each model once — and report which one answered.
+   * One attempt per model keeps the worst case to a few seconds instead of a
+   * long silence the user would read as a hang.
+   */
+  const cloudAttempt = async (mode: InferenceMode): Promise<{ attempt: Attempt; model: string }> => {
+    const chain = [input.policy.cloudModel, ...input.policy.fallbackCloudModels].filter(
+      (model, index, all) => all.indexOf(model) === index,
+    );
+    let lastError: unknown = null;
+    for (const model of chain) {
+      try {
+        const attempt = await execute(mode, model);
+        return { attempt, model };
+      } catch (error) {
+        const code = classifyError(error).code;
+        if (code === "MODEL_OVERLOADED" || code === "MODEL_NOT_FOUND") {
+          lastError = error;
+          continue;
+        }
+        throw error;
+      }
+    }
+    throw lastError ?? new Error("No cloud model in the chain could answer.");
+  };
+
   const startedAt = performance.now();
 
   try {
     let attempt: Attempt;
+    let modelUsed: string | null = null;
     let fallbackReason: RunInferenceResult["fallbackReason"] = null;
 
     try {
-      attempt = await execute(predicted.inferenceMode);
+      if (predicted.inferenceMode === "only_in_cloud" || predicted.inferenceMode === "prefer_in_cloud") {
+        const cloud = await cloudAttempt(predicted.inferenceMode);
+        attempt = cloud.attempt;
+        modelUsed = cloud.model;
+      } else {
+        attempt = await execute(predicted.inferenceMode, input.policy.cloudModel);
+      }
     } catch (error) {
       if (!isDeviceTimeout(error)) throw error;
 
@@ -191,7 +225,9 @@ export async function runInference(input: RunInferenceInput): Promise<RunInferen
       // pretending the prediction was right — the badge and ledger will show the
       // disagreement, which is the honest outcome.
       fallbackReason = "device-timeout";
-      attempt = await execute("only_in_cloud");
+      const cloud = await cloudAttempt("only_in_cloud");
+      attempt = cloud.attempt;
+      modelUsed = cloud.model;
     }
 
     if (!attempt.text) {
@@ -208,6 +244,7 @@ export async function runInference(input: RunInferenceInput): Promise<RunInferen
       latencyMs: Math.round(performance.now() - startedAt),
       detectedScript: detection.script,
       fallbackReason,
+      modelUsed,
     };
   } catch (error) {
     const classified = classifyError(error);

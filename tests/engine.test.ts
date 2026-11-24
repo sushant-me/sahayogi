@@ -235,3 +235,53 @@ describe("runInference — device timeout fallback", () => {
     expect(result.actual).toBe("on_device");
   });
 });
+
+describe("runInference — model fallback chain", () => {
+  it("moves to the next model when the primary is retired", async () => {
+    // Only models.ts is mocked, so this exercises the real chain logic.
+    mockedBuildModel.mockImplementation(({ cloudModel }) =>
+      ({
+        generateContentStream: async () => {
+          if (cloudModel === "retired-model") {
+            throw new Error("models/retired-model is not found for API version v1main, or is not supported for generateContent");
+          }
+          const stream = (async function* () {
+            yield { text: () => "answered by the fallback" };
+          })();
+          return { stream, response: Promise.resolve({ inferenceSource: "in_cloud", text: () => "answered by the fallback" }) };
+        },
+      }) as never,
+    );
+
+    const result = await runInference(
+      baseInput({
+        taskKind: "exam",
+        policy: { ...DEFAULT_POLICY, cloudModel: "retired-model", fallbackCloudModels: ["working-model"] },
+      }),
+    );
+
+    expect(result.modelUsed).toBe("working-model");
+    expect(result.text).toBe("answered by the fallback");
+    expect(result.predicted.inferenceMode).toBe("prefer_in_cloud");
+  });
+
+  it("tries each model once, in order, and reports the last failure", async () => {
+    const tried: string[] = [];
+    mockedBuildModel.mockImplementation(({ cloudModel }) => {
+      tried.push(cloudModel);
+      return {
+        generateContentStream: async () => {
+          throw new Error("models/x is no longer available to new users");
+        },
+      } as never;
+    });
+
+    const error = await expectAppError(
+      runInference(
+        baseInput({ taskKind: "exam", policy: { ...DEFAULT_POLICY, cloudModel: "a", fallbackCloudModels: ["b", "c"] } }),
+      ),
+    );
+    expect(error.code).toBe("MODEL_NOT_FOUND");
+    expect(tried).toEqual(["a", "b", "c"]);
+  });
+});

@@ -18,6 +18,7 @@ export type AppErrorCode =
   | "OFFLINE_NO_DEVICE"
   | "QUOTA_EXCEEDED"
   | "PERMISSION_DENIED"
+  | "MODEL_OVERLOADED"
   | "MODEL_NOT_FOUND"
   | "NETWORK"
   | "CANCELLED"
@@ -63,6 +64,8 @@ const HINTS: Record<AppErrorCode, string> = {
   QUOTA_EXCEEDED: "The free AI Logic quota is exhausted for now. Wait a few minutes and retry.",
   PERMISSION_DENIED:
     "AI Logic is not enabled for this project. Build → AI Logic → Get started, accept the terms, then retry.",
+  MODEL_OVERLOADED:
+    "The model is momentarily overloaded. This is temporary — retry in a few seconds.",
   MODEL_NOT_FOUND: "The configured cloud model id was rejected. Check routing_policy.cloudModel.",
   NETWORK: "The network request failed. Check your connection and retry.",
   CANCELLED: "The request was cancelled.",
@@ -79,6 +82,7 @@ const RETRYABLE: Record<AppErrorCode, boolean> = {
   OFFLINE_NO_DEVICE: true,
   QUOTA_EXCEEDED: true,
   PERMISSION_DENIED: false,
+  MODEL_OVERLOADED: true,
   MODEL_NOT_FOUND: false,
   NETWORK: true,
   CANCELLED: false,
@@ -127,9 +131,6 @@ export function classifyError(error: unknown): AppError {
   if (haystack.includes("only_on_device") || haystack.includes("on-device model is not available") || haystack.includes("local languagemodel api not available")) {
     return make("DEVICE_UNAVAILABLE");
   }
-  if (haystack.includes("notsupported") || haystack.includes("not supported") || haystack.includes("unsupported language")) {
-    return make("LANGUAGE_UNSUPPORTED_ON_DEVICE");
-  }
   // gRPC/HTTP codes arrive with either separator depending on the transport.
   if (
     haystack.includes("quota") ||
@@ -139,11 +140,34 @@ export function classifyError(error: unknown): AppError {
   ) {
     return make("QUOTA_EXCEEDED");
   }
-  if (haystack.includes("not found") || haystack.includes("404") || haystack.includes("model_not_found") || haystack.includes("invalid model")) {
+  if (
+    haystack.includes("not found") ||
+    haystack.includes("404") ||
+    haystack.includes("model_not_found") ||
+    haystack.includes("invalid model") ||
+    haystack.includes("no longer available")
+  ) {
     return make("MODEL_NOT_FOUND");
+  }
+
+  // Narrow: a DOMException named NotSupportedError, or language-specific wording.
+  // The generic phrase "not supported" also appears in model-id errors, which is
+  // why this check now sits *after* the model checks.
+  if (rawName === "NotSupportedError" || haystack.includes("unsupported language") || haystack.includes("does not support this language")) {
+    return make("LANGUAGE_UNSUPPORTED_ON_DEVICE");
   }
   // "API has not been used in project" / API_NOT_ENABLED is an enablement problem,
   // not a wrong model id — it belongs with the permission branch below.
+  // Capacity problems read like network errors but are not: the request reached
+  // the model and was refused for load, so "check your connection" is wrong.
+  if (
+    haystack.includes("high demand") ||
+    haystack.includes("overloaded") ||
+    haystack.includes("[500") ||
+    haystack.includes("unavailable")
+  ) {
+    return make("MODEL_OVERLOADED");
+  }
   if (
     haystack.includes("has not been used in project") ||
     haystack.includes("service_disabled") ||

@@ -135,3 +135,34 @@ describe("classifyError — AI Logic not enabled", () => {
     expect(classified.hint).toMatch(/AI Logic/i);
   });
 });
+
+describe("classifyError — capacity", () => {
+  it("does not call a 500 'high demand' a network failure", () => {
+    const classified = classifyError(
+      new Error("AI: Error fetching from https://…: [500 ] This model is currently experiencing high demand."),
+    );
+    expect(classified.code).toBe("MODEL_OVERLOADED");
+    expect(classified.retryable).toBe(true);
+    expect(classified.hint).toMatch(/temporary/i);
+  });
+
+  it("recognises an explicit overload/unavailable wording", () => {
+    expect(classifyError(new Error("The model is overloaded")).code).toBe("MODEL_OVERLOADED");
+    expect(classifyError(new Error("status UNAVAILABLE")).code).toBe("MODEL_OVERLOADED");
+  });
+});
+
+describe("classifyError — model ids vs language", () => {
+  it("does not read a model-id 404 as an unsupported language", () => {
+    const classified = classifyError(
+      new Error("models/gemini-3.8-flash-lite is not found for API version v1main, or is not supported for generateContent"),
+    );
+    expect(classified.code).toBe("MODEL_NOT_FOUND");
+  });
+
+  it("still recognises a true NotSupportedError", () => {
+    expect(classifyError(Object.assign(new Error("nope"), { name: "NotSupportedError" })).code).toBe(
+      "LANGUAGE_UNSUPPORTED_ON_DEVICE",
+    );
+  });
+});

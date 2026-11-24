@@ -52,6 +52,8 @@ export interface RoutingPolicy {
   onDeviceLanguages: string[];
   /** Cloud model id, resolved at smoke-test time rather than assumed. */
   cloudModel: string;
+  /** Tried in order when the primary is overloaded or retired. */
+  fallbackCloudModels: string[];
   /** Remote Config kill switch: force everything to the cloud. */
   onDeviceEnabled: boolean;
 }
@@ -87,7 +89,8 @@ export const DEFAULT_POLICY: RoutingPolicy = {
   heavyThresholdChars: 800,
   preferCloudForTasks: ["exam", "long-summary"],
   onDeviceLanguages: ["en", "ja", "es", "de", "fr"],
-  cloudModel: "gemini-2.5-flash",
+  cloudModel: "gemini-3.8-flash",
+  fallbackCloudModels: ["gemini-3.8-pro", "gemini-flash-latest", "gemini-3.6-flash"],
   onDeviceEnabled: true,
 };
 
@@ -106,7 +109,12 @@ export interface PolicyParseResult {
  */
 export function parsePolicy(raw: unknown): PolicyParseResult {
   const issues: string[] = [];
-  const policy: RoutingPolicy = { ...DEFAULT_POLICY, preferCloudForTasks: [...DEFAULT_POLICY.preferCloudForTasks], onDeviceLanguages: [...DEFAULT_POLICY.onDeviceLanguages] };
+  const policy: RoutingPolicy = {
+    ...DEFAULT_POLICY,
+    preferCloudForTasks: [...DEFAULT_POLICY.preferCloudForTasks],
+    onDeviceLanguages: [...DEFAULT_POLICY.onDeviceLanguages],
+    fallbackCloudModels: [...DEFAULT_POLICY.fallbackCloudModels],
+  };
 
   let value: Record<string, unknown> | null = null;
   if (typeof raw === "string") {
@@ -137,6 +145,14 @@ export function parsePolicy(raw: unknown): PolicyParseResult {
     policy.cloudModel = value.cloudModel.trim();
   } else if (value.cloudModel !== undefined) {
     issues.push("cloudModel must be a non-empty string; using default");
+  }
+
+  if (Array.isArray(value.fallbackCloudModels)) {
+    policy.fallbackCloudModels = value.fallbackCloudModels.filter(
+      (m): m is string => typeof m === "string" && m.trim().length > 0,
+    );
+  } else if (value.fallbackCloudModels !== undefined) {
+    issues.push("fallbackCloudModels must be an array; using default");
   }
 
   if (Array.isArray(value.preferCloudForTasks)) {
