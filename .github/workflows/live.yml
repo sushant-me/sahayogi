@@ -38,3 +38,12 @@ jobs:
         run: npm run a11y
         env:
           CHROME_BIN: /usr/bin/google-chrome
+
+      # The beats a recording relies on: the legend, the route preview, the Nepali preview, the
+      # ledger with its failure count, and the self-check. If prose and pixels drift apart on the
+      # live site, this fails the night it happens rather than on camera. No quota is spent —
+      # --inference is deliberately not passed.
+      - name: Recording beats still on screen
+        run: npm run walkthrough
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
