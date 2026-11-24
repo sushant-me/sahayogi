@@ -139,17 +139,55 @@ After the take, before you clean up:
 
 ---
 
-## 9. If the cloud path cannot be enabled in time
+## 9. If the cloud path cannot answer
 
-Do **not** record a cloud answer that did not happen. Two honest options:
+Three distinct situations, and they need different words. Do **not** record a cloud answer that did not
+happen.
 
-**Option A — on-device only (still a strong single-platform entry).** Record shots 1–5 and 10. Say plainly:
-"the cloud path is implemented through the same SDK; this build has AI Logic enablement pending, so I am
-showing the on-device half, which is the half that matters for the privacy and offline claim." Then show
-the Transparency panel with `cloud (fallback)` rows if any exist, and the code.
+**A. AI Logic is not enabled at all.** Record shots 1–5 and 10 and say plainly: "the cloud path is
+implemented through the same SDK; this build has AI Logic enablement pending, so I am showing the
+on-device half, which is the half that matters for the privacy and offline claim."
 
-**Option B — record the cloud half against a project that is enabled** (a teammate's, or a fresh project
-where you complete the AI Logic enablement first). Then both halves are real, on two projects.
+**B. Enabled, but the free tier is rate-limited** — the most likely case, and the *better* story. Nothing
+is broken; the router works, the request reaches Google, and the quota refuses it. The app records that
+refusal rather than hiding it. Record with this narration:
+
+1. **Hook** — "Every study tool assumes good internet. This one assumes the opposite: a metered
+   connection, a shared laptop, and a network that drops."
+
+2. **Type, don't send** — "Watch the route preview. It has already decided this short English question
+   belongs on the device — before anything is sent. The decision is made locally, and it can be
+   inspected."
+
+3. **Send it** — "The answer comes back badged on-device, with its latency. That text never left the
+   machine — no request, no data, no cost. Read the number off the screen rather than predicting it."
+
+4. **Airplane mode, ask again** — "Network off. Still answers. The header says offline, because a study
+   tool that quietly needs a connection is useless on a bus."
+
+5. **Type Nepali, don't send** — "Devanagari. The on-device model doesn't read it, and the app says so
+   instead of failing: routed to the cloud, reason 'language is cloud-only'. That is a limitation being
+   reported, not hidden."
+
+6. **Settings → Transparency** — "Every prompt is a decision, and the ledger keeps the last forty. This row
+   routed to the cloud and the free tier refused it — so it says 'no answer, quota exceeded'. That row
+   is the whole point: when the system fails, you can see exactly what it tried, instead of wondering
+   whether it did anything at all. Export it and you have the file."
+
+7. **Settings → Run self-check** — "This proves the wiring without spending a single token: config,
+   anonymous auth, App Check attestation, and a real Firestore write-read-delete round trip."
+
+8. **Code** — "One `getGenerativeModel` call carries both paths. After the call we read back
+   `inferenceSource` — that string is what fills the badge. The app never guesses where the answer came
+   from."
+
+9. **Close** — "Gemini Nano on the device, cloud when it must be, one SDK — and every answer, including
+   the ones that failed, states where it ran."
+
+That demonstrates the design *under the condition the design exists for*, and it is entirely true.
+
+**C. Record the cloud half against an enabled project** (a teammate's, or a fresh project where you
+complete the AI Logic enablement first). Then both halves are real, on two projects.
 
 What is never acceptable: a mock, a paused screen, or a badge added in editing. A judge who checks the
 repo will find the truth, and the honesty is itself part of the score.

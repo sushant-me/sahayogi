@@ -100,6 +100,9 @@ before the language and length rules. With the weights installed the reasons dif
 | Quiz → Flashcards (with the weights installed) | flashcards are the light task, so they run on-device |
 | Code: `src/ai/engine.ts` | the `inferenceSource` capture that makes every claim checkable |
 
+A full read-aloud narration for this variant is in
+[recording.md § 9B](recording.md#9-if-the-cloud-path-cannot-answer).
+
 Say it out loud: *"the cloud tier is out of credits right now — which is exactly the situation this
 app is built for, so here is the routing decision without the call, and here is the ledger recording
 that the attempt failed rather than pretending it succeeded."*
