@@ -77,6 +77,34 @@ The preview badge is dashed and labelled `PREDICTED`; it only becomes solid evid
 With a seeded ledger the panel renders prediction → actual pairs, flags `prediction missed`, shows
 per-decision latency and the device string, and enables `Export routing log (JSON)`.
 
+### The cloud request genuinely reaches Google — **verified**
+
+Running the app against the real project (web app registered in `hackthon-dcdf7`, config in
+`.env.local`) produced an actual server response rather than a client-side failure:
+
+```
+POST https://firebasevertexai.googleapis.com/v1beta/projects/hackthon-dcdf7/models/gemini-2.5-flash:streamGenerateContent?alt=sse
+→ 403 ACCESS_DENIED  "Permission denied on the service."
+```
+
+What that proves: the web config is valid, the hybrid model object initialised, the SDK selected its
+cloud path, requests are not blocked by App Check or CORS, and the failing layer is **Google-side API
+enablement** — i.e. AI Logic has not been enabled for the project yet. The error is surfaced to the user
+as `PERMISSION_DENIED` with that exact remedy, not as "check your connection".
+
+### A hang found by running it, not by reading it — **found and fixed**
+
+The first run of that same build **hung indefinitely** at `Thinking…`. Chrome reported
+`availability() === "downloadable"`, so the policy asked the SDK for `prefer_on_device`; on a machine
+where the weights never arrive, the SDK waits on the download and never falls back.
+
+Fixed in three places: the policy only asks for the device when `availability() === "available"`
+(new `device-not-ready` reason); the engine races the initial device call against a 12 s timeout and
+retries once in the cloud, reporting `predicted=prefer_on_device / actual=in_cloud` so the badge reads
+`cloud (fallback)`; and an explicit On-device pin raises `DEVICE_NOT_READY` instead of being silently
+substituted. A 403 that the SDK words as "Error fetching … Permission denied" was also misclassified as
+a network error and is now `PERMISSION_DENIED`.
+
 ### SDK contract — **verified against the installed package, not the docs**
 
 From `@firebase/ai@3.1.0` type declarations and bundled code:
@@ -113,10 +141,10 @@ Therefore the on-device demo is recorded on Windows/macOS Chrome. See
 
 | Claim | Status | Blocked on |
 |---|---|---|
-| A cloud request completes through App Check, returning `inferenceSource === "in_cloud"` | **unverified** | A Firebase project web-app config (API key + appId) and an App Check provider registered for the origin |
-| Anonymous sign-in works against this project | **unverified** | same |
-| Firestore writes/reads and the offline queue sync | **unverified** | same |
-| Deployed Hosting URL serves the build with correct headers | **unverified** | same |
+| A cloud request **succeeds**, returning `inferenceSource === "in_cloud"` | **unverified** — request verified as sent and rejected at the service layer | AI Logic must be enabled for the project, which requires accepting the Gemini API Additional Terms of Service (a human consent step) |
+| Anonymous sign-in works against this project | **unverified** | Authentication is not initialised (`auth/configuration-not-found`); the console offers an Identity Platform upgrade path for it |
+| Firestore writes/reads and the offline queue sync | **unverified** | Firestore database not created yet |
+| Deployed Hosting URL serves the build with correct headers | **unverified** | `firebase deploy` needs an authenticated CLI |
 | On-device inference returns real Gemini Nano output | **unverified** | Chrome on Windows/macOS with the weights installed |
 
 These are the only remaining unknowns. Everything else in this file was executed on this machine.

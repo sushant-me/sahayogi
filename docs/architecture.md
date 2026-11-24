@@ -57,7 +57,8 @@ flowchart TD
     C -->|false| C1[only_in_cloud<br/><i>kill-switch</i>]
     C -->|true| D{Device model<br/>available?}
     D -->|unavailable / unsupported| D1[only_in_cloud<br/><i>device-unavailable</i>]
-    D -->|available / downloadable / downloading| E{Script the device<br/>cannot read?}
+    D -->|downloadable / downloading| D2[only_in_cloud<br/><i>device-not-ready</i>]
+    D -->|available| E{Script the device<br/>cannot read?}
     E -->|yes e.g. Devanagari| E1[only_in_cloud<br/><i>unsupported-language</i>]
     E -->|no| F{Heavy task or<br/>over threshold?}
     F -->|no| G[prefer_on_device<br/><i>light-task</i>]
@@ -100,3 +101,5 @@ only evidence that the router can be wrong.
 | Malformed `routing_policy` | `parsePolicy` | defaults + the parse issue listed in Settings |
 | Render crash | `ErrorBoundary` | actionable screen, "saved chats are still on disk" |
 | Streaming aborted mid-answer | stream loop | partial text is kept, labelled, not discarded |
+| Model reported `downloadable` but never arrives | 12 s race on the initial device call | one cloud retry; badge reads `cloud (fallback)` because predicted ≠ actual |
+| Device pinned but silent | same race, no retry | `DEVICE_NOT_READY` with "switch Mode to Auto" — never a silent substitution |
