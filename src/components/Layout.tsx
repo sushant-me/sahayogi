@@ -14,6 +14,15 @@ const NAV: Array<{ id: PageId; label: string }> = [
   { id: "settings", label: "Settings" },
 ];
 
+const REPO = "https://github.com/sushant-me/sahayogi";
+
+const DOCS = {
+  architecture: `${REPO}/blob/main/docs/architecture.md`,
+  verification: `${REPO}/blob/main/docs/verification.md`,
+  browserSupport: `${REPO}/blob/main/docs/browser-support.md`,
+  source: REPO,
+};
+
 const DEVICE_LABEL: Record<string, { text: string; tone: "device" | "warn" | "danger" | "cloud" }> = {
   available: { text: "Nano ready", tone: "device" },
   downloadable: { text: "Nano not downloaded", tone: "warn" },
@@ -107,6 +116,14 @@ export function Layout({
           Built for #BuildHybridAI 2026 with Firebase AI Logic hybrid inference — Gemini Nano on-device,
           cloud fallback through the same SDK. Every answer states where it ran.
         </p>
+        {/* A judge reading the live app should be able to reach the evidence without
+            going back to the submission page. */}
+        <nav aria-label="Documentation" className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11.5px]">
+          <a className="text-accent hover:underline" href={DOCS.architecture}>Architecture</a>
+          <a className="text-accent hover:underline" href={DOCS.verification}>Verification log</a>
+          <a className="text-accent hover:underline" href={DOCS.browserSupport}>Browser support</a>
+          <a className="text-accent hover:underline" href={DOCS.source}>Source</a>
+        </nav>
       </footer>
     </div>
   );
