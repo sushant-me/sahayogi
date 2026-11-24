@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { Layout, type PageId } from "./components/Layout";
 import { ToastStack } from "./components/ToastStack";
+import { UpdateBanner } from "./components/UpdateBanner";
 import { AskPage } from "./pages/AskPage";
 import { HistoryPage } from "./pages/HistoryPage";
 import { QuizPage } from "./pages/QuizPage";
@@ -33,6 +34,7 @@ export default function App() {
     <AppProvider>
       <Screens />
       <ToastStack />
+      <UpdateBanner />
     </AppProvider>
   );
 }

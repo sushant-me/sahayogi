@@ -123,6 +123,13 @@ export function Layout({
           <a className="text-accent hover:underline" href={DOCS.verification}>Verification log</a>
           <a className="text-accent hover:underline" href={DOCS.browserSupport}>Browser support</a>
           <a className="text-accent hover:underline" href={DOCS.source}>Source</a>
+          <button
+            type="button"
+            className="text-accent hover:underline"
+            onClick={() => onNavigate("settings")}
+          >
+            Self-check
+          </button>
         </nav>
       </footer>
     </div>

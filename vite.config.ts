@@ -11,7 +11,9 @@ export default defineConfig({
     // tab happens to be open. It precaches same-origin assets only: Firebase
     // traffic is cross-origin and is never cached here.
     VitePWA({
-      registerType: "autoUpdate",
+      // "prompt", not "autoUpdate": an open tab must not keep running the previous
+      // build without saying so. UpdateBanner surfaces the swap.
+      registerType: "prompt",
       includeAssets: ["favicon.svg", "icons/*.png"],
       devOptions: { enabled: false },
       manifest: {
