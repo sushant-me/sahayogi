@@ -344,3 +344,28 @@ describe("AskPage automatic retry", () => {
     vi.useRealTimers();
   });
 });
+
+describe("AskPage when a new chat starts during a retry wait", () => {
+  it("drops the armed retry instead of answering into an empty conversation", async () => {
+    vi.useFakeTimers();
+    mockedLog.mockClear();
+    mockedRun.mockReset();
+    mockedRun.mockRejectedValue({ code: "QUOTA_EXCEEDED", message: "quota", hint: "wait" });
+
+    renderAsk();
+    fireEvent.change(screen.getByLabelText("Your question"), { target: { value: "Question for the old chat" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
+
+    await vi.waitFor(() => expect(screen.getByText(/retrying automatically/i)).toBeTruthy());
+    // the question is genuinely kept on screen while waiting
+    expect(screen.getByText("Question for the old chat")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: /new chat/i }));
+    await vi.advanceTimersByTimeAsync(120_000);
+
+    // no retry fired, and the transcript is empty
+    expect(mockedRun).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText("Question for the old chat")).toBeNull();
+    vi.useRealTimers();
+  });
+});

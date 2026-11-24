@@ -180,6 +180,10 @@ export function AskPage() {
 
   /** Start a fresh conversation; the previous one is already saved in History. */
   function startNewChat() {
+    // Starting over also means dropping the retry armed for the previous conversation:
+    // it would otherwise fire into an empty chat and answer a question nobody is looking at.
+    cancelAutoRetry();
+    autoRetryCountRef.current = 0;
     chatIdRef.current = null;
     setTurns([]);
     setInput("");
