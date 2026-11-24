@@ -1,0 +1,33 @@
+{
+  "app": "Sahayogi",
+  "ledger": "routing decisions recorded from Firebase AI Logic hybrid inference",
+  "exportedAt": "2026-11-24T18:18:31.868Z",
+  "schema": {
+    "predictedMode": "InferenceMode requested by the routing policy",
+    "actual": "InferenceSource reported by the SDK after the request",
+    "agreed": "predicted on-device state equals the reported source"
+  },
+  "summary": {
+    "total": 1,
+    "onDevice": 0,
+    "cloud": 1,
+    "disagreements": 0,
+    "avgLatency": 4655
+  },
+  "rows": [
+    {
+      "id": "rmwv0pwjvb7q3",
+      "at": 1795544304907,
+      "taskKind": "chat",
+      "chars": 52,
+      "predictedMode": "only_in_cloud",
+      "reason": "device-not-ready",
+      "actual": "in_cloud",
+      "latencyMs": 4655,
+      "degraded": false,
+      "agreed": true,
+      "device": null,
+      "model": "gemini-3.6-flash"
+    }
+  ]
+}

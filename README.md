@@ -14,6 +14,9 @@ Built for **#BuildHybridAI 2026** (Devpost). Web platform (Chrome), Firebase AI 
 
 ![Settings: policy: remote, source: remote, heavyThresholdChars 60 — changed with no deploy](docs/screenshots/policy-remote.png)
 
+A real exported ledger is committed at [docs/evidence/](docs/evidence/) — one row per decision with the
+requested mode, the SDK's reported source, the model that answered, and whether the two agreed.
+
 ---
 
 ## 1. The problem
