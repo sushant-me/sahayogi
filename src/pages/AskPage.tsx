@@ -32,6 +32,8 @@ interface Turn {
   actual: InferenceSource | null;
   reason: RouteReason | "none";
   latencyMs: number | null;
+  /** True when this turn is a failure report rather than an answer. */
+  failed?: boolean;
 }
 
 const EXAMPLES: Array<{ label: string; text: string }> = [
@@ -243,6 +245,7 @@ export function AskPage() {
           actual: null,
           reason: "none",
           latencyMs: null,
+          failed: true,
         },
       ]);
     } finally {
@@ -300,17 +303,36 @@ export function AskPage() {
                 </div>
               ) : (
                 <div className="space-y-4 pt-2">
-                  {turns.map((turn) => (
-                    <ChatMessage
-                      key={turn.id}
-                      role={turn.role}
-                      text={turn.text}
-                      predictedMode={turn.predictedMode}
-                      actual={turn.actual}
-                      reason={turn.reason}
-                      latencyMs={turn.latencyMs}
-                    />
-                  ))}
+                  {turns.map((turn, index) => {
+                    // A failed turn can be retried with the question that produced it.
+                    const question = turns
+                      .slice(0, index)
+                      .reverse()
+                      .find((candidate) => candidate.role === "user")?.text;
+                    return (
+                      <ChatMessage
+                        key={turn.id}
+                        role={turn.role}
+                        text={turn.text}
+                        predictedMode={turn.predictedMode}
+                        actual={turn.actual}
+                        reason={turn.reason}
+                        latencyMs={turn.latencyMs}
+                        onRetry={
+                          turn.failed && question
+                            ? () => {
+                                // Replace the failed exchange rather than appending a
+                                // second copy of the same question.
+                                setTurns((current) =>
+                                  current.filter((_, position) => position !== index && position !== index - 1),
+                                );
+                                void send(question);
+                              }
+                            : undefined
+                        }
+                      />
+                    );
+                  })}
                   {sending ? (
                     <ChatMessage
                       role="model"

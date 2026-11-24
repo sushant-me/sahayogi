@@ -28,6 +28,8 @@ export interface ChatMessageProps {
   latencyMs?: number | null;
   syncedOffline?: boolean;
   streaming?: boolean;
+  /** Present only on failed answers: retry the same question. */
+  onRetry?: () => void;
 }
 
 export function ChatMessage({
@@ -39,6 +41,7 @@ export function ChatMessage({
   latencyMs = null,
   syncedOffline = false,
   streaming = false,
+  onRetry,
 }: ChatMessageProps) {  if (role === "user") {
     return (
       <div className="flex justify-end">
@@ -69,9 +72,18 @@ export function ChatMessage({
         </div>
         <AnswerText text={text} />
 
-        {!streaming && text ? (
-          <div className="mt-2 flex justify-end">
-            <CopyButton text={text} />
+        {!streaming && (text || onRetry) ? (
+          <div className="mt-2 flex items-center justify-end gap-2">
+            {onRetry ? (
+              <button
+                type="button"
+                onClick={onRetry}
+                className="rounded-md border border-line px-2 py-1 text-[11px] font-medium text-ink transition-colors hover:border-accent/50 hover:text-accent"
+              >
+                Try again
+              </button>
+            ) : null}
+            {text ? <CopyButton text={text} /> : null}
           </div>
         ) : null}
       </div>

@@ -12,6 +12,7 @@ import { getDeviceAvailability, preflightDeviceModel } from "../ai/models";
 import type { DeviceAvailability, RoutingPolicy, UserMode } from "../ai/policy";
 import { DEFAULT_POLICY, parsePolicy } from "../ai/policy";
 import { SYSTEM_INSTRUCTION } from "../ai/prompts";
+import { getAiLogic } from "../firebase/ai";
 import {
   configDiagnostics,
   ensureAnonymousUser,
@@ -99,6 +100,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         warmAppCheckToken();
       } catch (error) {
         console.warn("[sahayogi] App Check init failed:", error);
+      }
+
+      // Constructing the AI client is cheap but not free; do it during boot so the
+      // first question does not pay for it.
+      try {
+        getAiLogic();
+      } catch (error) {
+        console.warn("[sahayogi] AI client warm-up failed:", error);
       }
       const auth = await ensureAnonymousUser();
       if (!cancelled) {
