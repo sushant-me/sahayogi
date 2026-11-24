@@ -145,3 +145,28 @@ describe("QuizPage", () => {
     expect((screen.getByRole("button", { name: /flashcards/i }) as HTMLButtonElement).disabled).toBe(false);
   });
 });
+
+describe("QuizPage failure recovery", () => {
+  it("keeps the failure on screen with a retry instead of only a toast", async () => {
+    mockedRun.mockRejectedValue(
+      Object.assign(new Error("The on-device model did not respond."), {
+        code: "DEVICE_NOT_READY",
+        hint: "Wait for the download to finish, or switch Mode to Auto.",
+      }),
+    );
+
+    render(<QuizPage />);
+    const notes = screen.getByLabelText("Study notes");
+    fireEvent.change(notes, { target: { value: "Photosynthesis converts light energy into chemical energy." } });
+    fireEvent.click(screen.getByRole("button", { name: /flashcards/i }));
+
+    await waitFor(() => expect(screen.getByText("Generation failed")).toBeTruthy());
+    expect(screen.getByText(/did not respond/)).toBeTruthy();
+    expect(screen.getByText(/Wait for the download to finish/)).toBeTruthy();
+
+    // the retry runs the same task again rather than making the user start over
+    mockedRun.mockResolvedValue(result('[{"front":"Q","back":"A"}]'));
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    await waitFor(() => expect(mockedRun).toHaveBeenCalledTimes(2));
+  });
+});

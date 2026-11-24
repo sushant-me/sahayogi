@@ -7,7 +7,7 @@
  * actually happened.
  */
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { runInference } from "../ai/engine";
 import type { AppError } from "../ai/errors";
@@ -36,11 +36,21 @@ export function QuizPage() {
   const { policy, deviceAvailability, online, userMode, pushToast } = useApp();
   const [notes, setNotes] = useDraft("quiz-notes");
   const [busy, setBusy] = useState<TaskKind | null>(null);
+  const [elapsedMs, setElapsedMs] = useState(0);
+  const [failure, setFailure] = useState<{ message: string; hint?: string; task: TaskKind } | null>(null);
   const [cards, setCards] = useState<Flashcard[] | null>(null);
   const [rawFallback, setRawFallback] = useState<string | null>(null);
   const [exam, setExam] = useState<string | null>(null);
   const [revealed, setRevealed] = useState<Set<number>>(new Set());
   const [meta, setMeta] = useState<Meta | null>(null);
+
+  // The exam is the longest operation in the app; a static label looks hung.
+  useEffect(() => {
+    if (!busy) return;
+    const startedAt = performance.now();
+    const timer = window.setInterval(() => setElapsedMs(performance.now() - startedAt), 500);
+    return () => window.clearInterval(timer);
+  }, [busy]);
 
   const expected = useMemo(() => {
     const text = notes.trim() || "x";
@@ -62,6 +72,8 @@ export function QuizPage() {
     const text = notes.trim();
     if (!text || busy) return;
     setBusy(task);
+    setElapsedMs(0);
+    setFailure(null);
     setCards(null);
     setRawFallback(null);
     setExam(null);
@@ -106,6 +118,9 @@ export function QuizPage() {
       });
     } catch (error) {
       const appErr = error as AppError;
+      // A toast disappears; a study tool should keep the failure and the way out on
+      // screen, exactly like the Ask page does.
+      setFailure({ message: appErr.message || "Generation failed.", hint: appErr.hint, task });
       pushToast({ kind: "error", message: appErr.message || "Generation failed.", hint: appErr.hint });
     } finally {
       setBusy(null);
@@ -161,9 +176,21 @@ export function QuizPage() {
             </Button>
           </div>
         </div>
-        <p className="mt-1.5 text-[10.5px] leading-relaxed text-muted">
-          The exam is a long generation — about a minute in practice — and the badge afterwards reports which path
-          actually ran.
+        <p className="mt-1.5 text-[10.5px] leading-relaxed text-muted" aria-live="off">
+          {busy ? (
+            <>
+              <span className="text-accent">
+                {busy === "exam" ? "Writing the exam" : "Generating flashcards"}
+                {elapsedMs > 1500 ? ` — ${Math.floor(elapsedMs / 1000)}s` : "…"}
+              </span>
+              <span className="text-muted"> · the badge afterwards reports which path ran</span>
+            </>
+          ) : (
+            <>
+              The exam is a long generation — about a minute in practice — and the badge afterwards reports which
+              path actually ran.
+            </>
+          )}
         </p>
 
       </BentoCard>
@@ -201,6 +228,21 @@ export function QuizPage() {
           <RouteBadge predictedMode={meta.mode} actual={meta.actual} latencyMs={meta.latencyMs} />
           <span className="text-[11.5px] text-muted">{meta.reason}</span>
         </div>
+      ) : null}
+
+      {failure ? (
+        <BentoCard span="lg:col-span-12 sm:col-span-6" label="Generation failed" accent="danger">
+          <p className="text-[13px] leading-relaxed text-ink">{failure.message}</p>
+          {failure.hint ? <p className="mt-1 text-[12px] leading-relaxed text-muted">{failure.hint}</p> : null}
+          <div className="mt-3 flex gap-2">
+            <Button variant="secondary" onClick={() => void run(failure.task)} disabled={busy !== null}>
+              Try again
+            </Button>
+            <Button variant="ghost" onClick={() => setFailure(null)}>
+              Dismiss
+            </Button>
+          </div>
+        </BentoCard>
       ) : null}
 
       {cards && cards.length > 0 ? (
