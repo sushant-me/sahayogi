@@ -281,6 +281,19 @@ export function AskPage() {
         return;
       }
 
+      // Record the attempt even though it failed: an empty ledger after a failed demo reads
+      // as "nothing happened", which is the opposite of what the ledger is for.
+      logRoute({
+        taskKind: "chat",
+        chars: text.length,
+        predictedMode: preview?.inferenceMode ?? "prefer_on_device",
+        reason: preview?.reason ?? "light-task",
+        actual: null,
+        latencyMs: 0,
+        degraded: false,
+        error: appErr.code ?? "UNKNOWN",
+      });
+
       pushToast({ kind: "error", message: appErr.message || "Inference failed.", hint: appErr.hint });
       setTurns((current) => [
         ...current,
@@ -543,6 +556,7 @@ export function AskPage() {
             </div>
             <div className="mt-2 border-t border-line/60 pt-1">
               <BentoRow k="prediction missed">{summary.disagreements}</BentoRow>
+          <BentoRow k="failed attempts">{summary.failed}</BentoRow>
               <BentoRow k="avg latency">{summary.avgLatency !== null ? `${summary.avgLatency} ms` : "—"}</BentoRow>
             </div>
           </BentoCard>

@@ -50,6 +50,7 @@ export function SettingsPage() {
         </div>
         <div className="grid grid-cols-2 gap-x-5">
           <BentoRow k="prediction missed">{summary.disagreements}</BentoRow>
+          <BentoRow k="failed attempts">{summary.failed}</BentoRow>
           <BentoRow k="avg latency">{summary.avgLatency !== null ? `${summary.avgLatency} ms` : "—"}</BentoRow>
         </div>
         <div className="mt-3 flex flex-wrap gap-2">

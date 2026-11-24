@@ -25,6 +25,12 @@ export interface RoutingLogRow {
   device: string | null;
   /** Cloud model that answered, when the cloud was used. */
   model: string | null;
+  /**
+   * Set when the attempt failed. A failed attempt is still a routing decision, and hiding
+   * it would make the ledger read "0 decisions" after a demo where nothing worked — the
+   * least useful possible moment to say nothing happened.
+   */
+  error: string | null;
 }
 
 const STORAGE_KEY = "sahayogi.routingLog";
@@ -91,6 +97,7 @@ export interface LogRouteInput {
   degraded: boolean;
   device?: string | null;
   model?: string | null;
+  error?: string | null;
 }
 
 export function logRoute(input: LogRouteInput): void {
@@ -110,6 +117,7 @@ export function logRoute(input: LogRouteInput): void {
     agreed: predictedDevice === actuallyDevice,
     device: input.device ?? null,
     model: input.model ?? null,
+    error: input.error ?? null,
   };
 
   rows = [row, ...rows].slice(0, MAX_ROWS);
@@ -123,6 +131,11 @@ export function clearRoutingLog(): void {
   emit();
 }
 
+/** Snapshot for non-React callers (tests, the export path). */
+export function readRoutingLog(): RoutingLogRow[] {
+  return rows;
+}
+
 export function useRoutingLog(): RoutingLogRow[] {
   return useSyncExternalStore(subscribe, getSnapshot, () => rows);
 }
@@ -133,6 +146,7 @@ export function summariseLog(log: RoutingLogRow[]): {
   onDevice: number;
   cloud: number;
   disagreements: number;
+  failed: number;
   avgLatency: number | null;
 } {
   const onDevice = log.filter((r) => r.actual === "on_device").length;
@@ -142,7 +156,9 @@ export function summariseLog(log: RoutingLogRow[]): {
     total: log.length,
     onDevice,
     cloud,
-    disagreements: log.filter((r) => !r.agreed).length,
+    // A failure has no actual source, so it is not a disagreement — it is its own outcome.
+    disagreements: log.filter((r) => !r.agreed && r.actual !== null).length,
+    failed: log.filter((r) => r.error !== null).length,
     avgLatency:
       withLatency.length > 0
         ? Math.round(withLatency.reduce((sum, r) => sum + r.latencyMs, 0) / withLatency.length)

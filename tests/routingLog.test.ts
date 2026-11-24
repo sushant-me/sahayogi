@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { RoutingLogRow } from "../src/state/routingLog";
-import { exportRoutingLogJSON, summariseLog } from "../src/state/routingLog";
+import { clearRoutingLog, exportRoutingLogJSON, readRoutingLog, logRoute, summariseLog } from "../src/state/routingLog";
 
 function row(overrides: Partial<RoutingLogRow> = {}): RoutingLogRow {
   return {
@@ -88,5 +88,37 @@ describe("exportRoutingLogJSON", () => {
     const parsed = JSON.parse(exportRoutingLogJSON([])) as { summary: { total: number }; rows: unknown[] };
     expect(parsed.summary.total).toBe(0);
     expect(parsed.rows).toEqual([]);
+  });
+});
+
+describe("failed attempts", () => {
+  it("records the error code and counts as failed, not as a disagreement", () => {
+    clearRoutingLog();
+    logRoute({
+      taskKind: "chat",
+      chars: 40,
+      predictedMode: "prefer_on_device",
+      reason: "light-task",
+      actual: null,
+      latencyMs: 0,
+      degraded: false,
+      error: "QUOTA_EXCEEDED",
+    });
+
+    const rows = readRoutingLog();
+    expect(rows[0].error).toBe("QUOTA_EXCEEDED");
+    expect(rows[0].actual).toBeNull();
+
+    const summary = summariseLog(rows);
+    expect(summary.total).toBe(1);
+    expect(summary.failed).toBe(1);
+    // an attempt that never ran cannot have had its prediction contradicted
+    expect(summary.disagreements).toBe(0);
+  });
+
+  it("is carried into the exported JSON", () => {
+    const payload = JSON.parse(exportRoutingLogJSON(readRoutingLog()));
+    expect(payload.summary.failed).toBe(1);
+    expect(payload.rows[0].error).toBe("QUOTA_EXCEEDED");
   });
 });

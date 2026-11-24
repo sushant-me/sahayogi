@@ -42,7 +42,8 @@ So the app is built around a routing decision that is visible, recorded and test
   network, and answers written while offline are queued and sync later.
 - **Settings → Transparency** — the ledger of every routing decision: the mode the policy requested,
   the source the Firebase AI Logic SDK reported afterwards, the latency, and whether the two agreed.
-  Exportable as JSON.
+  **Failed attempts are recorded too**, with their error code, so a run that produced nothing is still
+  evidence of what was tried. Exportable as JSON.
 
 The educational point is deliberate: a student in Nepal asking in Devanagari gets a cloud answer *with
 the reason shown* ("this language is cloud-only"), rather than a mystery failure or a silent downgrade.

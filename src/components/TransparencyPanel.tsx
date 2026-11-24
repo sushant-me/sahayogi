@@ -40,9 +40,15 @@ function timeAgo(ms: number): string {
 }
 
 function Row({ row }: { row: RoutingLogRow }) {
-  const actualLabel =
-    row.actual === "on_device" ? "on-device" : row.actual === "in_cloud" ? "cloud" : "unknown";
-  const actualTone = row.actual === "on_device" ? "device" : "cloud";
+  const failed = row.error !== null;
+  const actualLabel = failed
+    ? "no answer"
+    : row.actual === "on_device"
+      ? "on-device"
+      : row.actual === "in_cloud"
+        ? "cloud"
+        : "unknown";
+  const actualTone = failed ? "danger" : row.actual === "on_device" ? "device" : "cloud";
 
   return (
     <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 border-b border-line/60 px-3 py-2.5 last:border-b-0 sm:grid-cols-[70px_1fr_auto_auto_auto]">
@@ -55,7 +61,8 @@ function Row({ row }: { row: RoutingLogRow }) {
             →
           </span>
           <Chip tone={actualTone}>{actualLabel}</Chip>
-          {!row.agreed ? <Chip tone="warn">prediction missed</Chip> : null}
+          {!row.agreed && !failed ? <Chip tone="warn">prediction missed</Chip> : null}
+          {failed ? <Chip tone="danger">{row.error}</Chip> : null}
           {row.degraded ? <Chip tone="warn">reduced quality</Chip> : null}
         </div>
         <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[11.5px] text-muted">
@@ -63,6 +70,7 @@ function Row({ row }: { row: RoutingLogRow }) {
           <span>{row.chars} chars</span>
           <span>{row.taskKind}</span>
           {row.model ? <span className="font-mono">{row.model}</span> : null}
+          {failed ? <span>the attempt failed; nothing was produced</span> : null}
           <span className="sm:hidden">{timeAgo(row.at)}</span>
         </div>
       </div>
