@@ -112,6 +112,8 @@ export async function getDeviceAvailability(timeoutMs = 4000): Promise<DeviceAva
 export interface PreflightResult {
   ok: boolean;
   message: string;
+  /** Work is still happening (a download in progress) — not a failure, not finished. */
+  pending?: boolean;
 }
 
 /**
@@ -127,15 +129,93 @@ export async function preflightDeviceModel(
   onProgress?: (loaded: number) => void,
 ): Promise<PreflightResult> {
   const model = buildModel({ mode: "prefer_on_device", cloudModel, systemInstruction });
-  await model.initializeDeviceModel((progress) => {
-    onProgress?.(progress);
-  });
+
+  const before = await getDeviceAvailability();
+  if (before === "available") {
+    return { ok: true, message: "On-device model ready." };
+  }
+  if (before !== "downloadable" && before !== "downloading") {
+    return {
+      ok: false,
+      message: `This browser cannot download the on-device model (reported: ${before}). Cloud answers are unaffected.`,
+    };
+  }
+
+  let sawProgress = false;
+  const storageUsedMb = async (): Promise<number | null> => {
+    try {
+      if (!navigator.storage?.estimate) return null;
+      const estimate = await navigator.storage.estimate();
+      return Math.round((estimate.usage ?? 0) / 1048576);
+    } catch {
+      return null;
+    }
+  };
+  const baselineMb = await storageUsedMb();
+
+  const download = model
+    .initializeDeviceModel((progress) => {
+      sawProgress = true;
+      onProgress?.(progress);
+    })
+    .then(() => "finished" as const)
+    .catch(() => "failed" as const);
+
+  const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  /**
+   * A stalled download looks identical to a slow one, and this promise only settles when the
+   * weights are ready — minutes later, legitimately. So watch for the *start*: if Chrome never
+   * reports progress and the state never becomes "downloading", the request was accepted and
+   * then dropped, which is the Linux case. Leaving the UI at "Preparing…" forever is precisely
+   * the failure this app promises not to have.
+   */
+  const watchdog = (async (): Promise<"started" | "stalled"> => {
+    // Evidence of a real download is bytes, not a status string: Chrome on Linux reports
+    // availability() === "downloading" indefinitely while nothing arrives. Watch progress
+    // callbacks and storage growth for ~60s before calling it stalled.
+    for (let tick = 0; tick < 30; tick += 1) {
+      await wait(2000);
+      if (sawProgress) return "started";
+      const now = await getDeviceAvailability();
+      if (now === "available") return "started";
+      const used = await storageUsedMb();
+      if (baselineMb !== null && used !== null && used > baselineMb + 5) return "started";
+    }
+    return "stalled";
+  })();
+
+  const first = await Promise.race([download, watchdog]);
+
+  if (first === "stalled") {
+    return {
+      ok: false,
+      message:
+        "Chrome accepted the request but no data arrived. This browser build reports a download without producing one — see docs/browser-support.md. Cloud answers are unaffected.",
+    };
+  }
+
+  // It really is downloading. Wait for it, but not forever.
+  const settled = first === "started" ? await Promise.race([download, wait(10 * 60_000).then(() => "timeout" as const)]) : first;
+
+  if (settled === "timeout") {
+    return {
+      ok: false,
+      pending: true,
+      message: "Still downloading after ten minutes. Keep this tab open, then press Re-check.",
+    };
+  }
+
   const availability = await getDeviceAvailability();
   if (availability === "available") {
     return { ok: true, message: "On-device model ready." };
   }
   return {
     ok: false,
-    message: `On-device model did not become available (reported: ${availability}).`,
+    pending: availability === "downloading",
+    message:
+      settled === "failed"
+        ? "The download did not complete. Press Enable offline mode to try again."
+        : `On-device model did not become available (reported: ${availability}).`,
   };
 }

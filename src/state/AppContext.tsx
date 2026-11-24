@@ -163,12 +163,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const result = await preflightDeviceModel(policy.cloudModel, SYSTEM_INSTRUCTION, (loaded) => {
         setPreflight((current) => ({ ...current, progress: loaded }));
       });
-      setPreflight({ running: false, progress: 1, message: result.message });
-      pushToast({
-        kind: result.ok ? "success" : "error",
-        message: result.ok ? "On-device model ready. Inference will stay on this device." : "On-device model unavailable.",
-        hint: result.ok ? undefined : result.message,
-      });
+      setPreflight({ running: false, progress: result.ok ? 1 : null, message: result.message });
+      // A download in progress is neither success nor failure — saying "unavailable" while
+      // Chrome is actively fetching 4 GB would be simply wrong.
+      if (result.pending) {
+        pushToast({ kind: "info", message: "The on-device model is downloading.", hint: result.message });
+      } else {
+        pushToast({
+          kind: result.ok ? "success" : "error",
+          message: result.ok
+            ? "On-device model ready. Inference will stay on this device."
+            : "On-device model unavailable.",
+          hint: result.ok ? undefined : result.message,
+        });
+      }
       await refreshDevice();
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);

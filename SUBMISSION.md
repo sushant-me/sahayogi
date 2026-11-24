@@ -109,10 +109,12 @@ final.inferenceSource;   // "on_device" | "in_cloud" — reported by the SDK, no
 
 ## Challenges we ran into
 
-- **Linux Chrome will not fetch the Nano weights.** On Chrome 158.0.8127.88 the API was present and
-  `availability()` returned `"downloadable"`, the hardware check passed — and the download still never
-  started, with no `downloadprogress` events, even with the optimization-guide feature forced and a
-  genuinely trusted user gesture. The negative result is documented in `docs/browser-support.md`, and the
+- **Linux Chrome reports a download it never performs.** On Chrome 158.0.8127.88 the API is present and
+  `availability()` returns `"downloadable"`; pressing the download button moves it to `"downloading"` — and
+  there it stays, while `navigator.storage.estimate()` sits at about 1 MB and no `downloadprogress` event
+  ever fires, even with the optimization-guide feature forced and a genuinely trusted user gesture. The
+  card now detects that stall in about a minute and says so, instead of leaving "Preparing…" on screen
+  forever. The negative result is documented in `docs/browser-support.md`, and the
   on-device half **must be recorded on Windows/macOS Chrome** — this repository is honest about the fact
   that it cannot be demonstrated on the Linux machine it was built on.
 - **`LanguageModel.params()` no longer exists** in that build, and the SDK's on-device surface accepts
