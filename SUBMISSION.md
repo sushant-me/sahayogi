@@ -1,7 +1,8 @@
 # Devpost submission pack — #BuildHybridAI 2026
 
-Everything below is written to be pasted straight into the Devpost form. Fill the three `<<...>>`
-placeholders once the URL/video/repo exist. Everything else is final.
+Everything below is written to be pasted straight into the Devpost form. One placeholder remains —
+`<<YOUTUBE_URL>>` — and it can only be filled once the video exists. Everything else is final and
+was checked against the deployed app and the repository, not against memory.
 
 ---
 
@@ -50,7 +51,8 @@ the reason shown* ("this language is cloud-only"), rather than a mystery failure
 
 React 19 + TypeScript + Vite + Tailwind, deployed on Firebase Hosting. The routing policy is a pure
 function (`src/ai/policy.ts`) with no Firebase, DOM or React imports, so the routing table is executed
-by tests rather than described in prose — 107 unit tests run with no project credentials, including the orchestration layer with only the model factory mocked.
+by tests rather than described in prose. The suite is 182 tests and runs with no project credentials and
+no network, including the orchestration layer with only the model factory mocked.
 
 The hybrid layer uses the Firebase AI Logic **hybrid inference SDK** directly. One model object carries
 both paths:
@@ -110,8 +112,9 @@ final.inferenceSource;   // "on_device" | "in_cloud" — reported by the SDK, no
 - **Linux Chrome will not fetch the Nano weights.** On Chrome 158.0.8127.88 the API was present and
   `availability()` returned `"downloadable"`, the hardware check passed — and the download still never
   started, with no `downloadprogress` events, even with the optimization-guide feature forced and a
-  genuinely trusted user gesture. We documented the negative result and recorded the on-device demo on
-  Windows/macOS Chrome.
+  genuinely trusted user gesture. The negative result is documented in `docs/browser-support.md`, and the
+  on-device half **must be recorded on Windows/macOS Chrome** — this repository is honest about the fact
+  that it cannot be demonstrated on the Linux machine it was built on.
 - **`LanguageModel.params()` no longer exists** in that build, and the SDK's on-device surface accepts
   only `expectedInputs`, `expectedOutputs`, `initialPrompts`, `monitor` and `signal` — Chrome's
   `temperature`/`topK` are not forwarded, so on-device sampling is whatever Nano defaults to.
@@ -127,9 +130,13 @@ final.inferenceSource;   // "on_device" | "in_cloud" — reported by the SDK, no
   side, and disagreement is surfaced.
 - **Offline is real**, not decorative: a service worker precaches the shell (verified by reloading with
   the network cut at the protocol level) and Firestore queues writes made offline.
-- The routing table is **tested** — 107 unit tests, no credentials required: every branch of the decision
-  table, the download/offline refusals, error mapping, and the edge that a prompt exactly at the threshold
-  stays on-device.
+- The routing table is **tested** — 182 tests, no credentials required: every branch of the decision table,
+  the download/offline refusals, error mapping, the edge that a prompt exactly at the threshold stays
+  on-device, and the Ask flow end to end with only the engine mocked.
+- **The claims are checkable from outside.** Three scripts, not adjectives: `npm run rules:check` proves the
+  Firestore rules allow the owner and deny everyone else (12 cases, including that stored messages cannot be
+  rewritten), `npm run a11y` audits every page at two widths, and `npm run preflight` plus the in-app
+  self-check probe the live project. `docs/verification.md` lists what was measured and what was not.
 - A failure taxonomy where **every error code has a UI affordance**; there is no silent `catch`.
 - The app **degrades honestly** in browsers without the Prompt API (verified: Brave 158.1.100.58 returns
   `typeof LanguageModel === "undefined"`) — it says cloud-only instead of pretending.
@@ -144,7 +151,10 @@ final.inferenceSource;   // "on_device" | "in_cloud" — reported by the SDK, no
 
 ## What's next
 
-- Route-level code splitting (Firebase is currently one ~300 kB gzipped chunk).
+- Lazy-loading the AI SDK itself. Route-level splitting was tried and reverted: it moved only ~7 kB
+  gzipped because Firebase dominates the one 303 kB chunk, and that measurement is in
+  `docs/verification.md`. Deferring `firebase/ai` until the first question is the change that would
+  actually shorten a cold start.
 - Constrained on-device output via `responseConstraint` once it is reliable across Nano versions.
 - Nepali on-device support: the policy already reads its language list from Remote Config, so enabling
   it is one array entry when Chrome adds the language.
@@ -156,7 +166,7 @@ final.inferenceSource;   // "on_device" | "in_cloud" — reported by the SDK, no
 
 | Criterion | Where to look |
 |---|---|
-| **Technological Implementation** | `src/ai/policy.ts` (pure, tested routing table) · `src/ai/models.ts` (one model, both paths) · `src/ai/engine.ts` (`inferenceSource` capture) · `tests/` (64 tests) · Settings → Transparency panel |
+| **Technological Implementation** | `src/ai/policy.ts` (pure, tested routing table) · `src/ai/models.ts` (one model, both paths) · `src/ai/engine.ts` (`inferenceSource` capture) · `tests/` (182 tests) · Settings → Transparency panel |
 | **Design** | Four coherent screens, per-answer badges, live route preview, prediction styled differently from evidence (dashed vs solid), device preflight with download progress, skeletons/empty states, typed error toasts, dark-first consistent spacing |
 | **Potential Impact** | On-device answers cost nothing and leave the device; heavy work still available; Devanagari handled explicitly; offline cold start; history readable with no network |
 | **Quality of the Idea** | The router is the product. Prediction-vs-reality is recorded and shown, including when the prediction was wrong. Language capability is surfaced as a routing reason rather than hidden. |
@@ -186,15 +196,19 @@ Rule for the recording: **nothing mocked, nothing staged**. If a shot needs a re
 ## Pre-submit checklist (from the official requirements)
 
 - [x] Repo **public**, **open-source license visible in the About panel** (Apache-2.0) — verified via the GitHub API
-- [ ] `firebase/ai` **imported and called at runtime** — `src/firebase/ai.ts`, `src/ai/models.ts`
-- [ ] **App Check** enabled; production domain registered (debug token acceptable, used only in dev)
-- [ ] **Hosted URL** live and free to access
-- [ ] **Video** ≤ 3 min, public on YouTube, English (or English subtitles), shows the app running
-- [ ] Description covers **value proposition + how AI Logic is used + features**
-- [ ] **Platform selected: Web (Chrome)** on the submission
-- [ ] README explains setup, the routing table, and the exact Chrome build/flags used
-- [ ] No secrets committed; `.env.example` only
-- [ ] Tested in a fresh browser profile (no cached service worker, no stale localStorage)
+- [x] `firebase/ai` **imported and called at runtime** — `src/firebase/ai.ts`, `src/ai/models.ts`, exercised by every answer
+- [x] **App Check** enabled with reCAPTCHA Enterprise; the production domain is registered, and the app ships with
+      `VITE_APP_CHECK_DEBUG=false` (a debug token was used during setup only)
+- [x] **Hosted URL** live and free to access — https://hackthon-dcdf7.web.app (200, self-check passes)
+- [ ] **Video** ≤ 3 min, public on YouTube, English (or English subtitles), shows the app running — *not recorded yet*
+- [x] Description covers **value proposition + how AI Logic is used + features** — this document
+- [ ] **Platform selected: Web (Chrome)** — a form action at submission time
+- [x] README explains setup, the routing table, and the exact Chrome build/flags used
+- [x] No secrets committed; `.env.example` only — the full history was scanned before publishing
+- [x] Tested in a fresh browser profile (no cached service worker, no stale localStorage) — every verification in
+      `docs/verification.md` used a clean profile
+
+Two checklist items cannot be done from this repository: the video, and ticking the platform box on the form.
 
 ## What this submission deliberately does **not** claim
 
