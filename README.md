@@ -6,6 +6,22 @@ The distinguishing feature is not that it uses AI. It is that **every answer sta
 
 Built for **#BuildHybridAI 2026** (Devpost). Web platform (Chrome), Firebase AI Logic hybrid inference.
 
+### For judges — a two-minute path
+
+1. Open **https://hackthon-dcdf7.web.app** in Chrome and click **Light question**. The answer carries a badge
+   naming the source the SDK reported, plus its latency.
+2. **Settings → Transparency**: the ledger of every decision — the mode the policy requested, the source the
+   SDK reported, and whether they agreed. *Export routing log (JSON)* downloads a real sample
+   (one is committed at [docs/evidence/](docs/evidence/)).
+3. The three files that carry the argument: [src/ai/policy.ts](src/ai/policy.ts) (the routing table),
+   [src/ai/models.ts](src/ai/models.ts) (one model object, both paths),
+   [src/ai/engine.ts](src/ai/engine.ts) (`inferenceSource` capture).
+4. [docs/verification.md](docs/verification.md) lists what was measured and — deliberately — what was not.
+
+The on-device half needs Chrome with the Gemini Nano weights installed; without them the app says
+`no device model` and routes to the cloud rather than pretending. See [docs/browser-support.md](docs/browser-support.md).
+
+
 **Live:** https://hackthon-dcdf7.web.app · **Project:** `hackthon-dcdf7`
 
 ![Ask page: a real cloud answer badged "cloud 4992 ms", with the routing rail beside it](docs/screenshots/ask-cloud.png)
