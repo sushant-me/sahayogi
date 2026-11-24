@@ -25,7 +25,9 @@ Built for **#BuildHybridAI 2026** (Devpost). Web platform (Chrome), Firebase AI 
    [src/ai/models.ts](src/ai/models.ts) (one model object, both paths),
    [src/ai/engine.ts](src/ai/engine.ts) (`inferenceSource` capture).
 4. [docs/verification.md](docs/verification.md) lists what was measured and — deliberately — what was not.
-5. [docs/demo-day.md](docs/demo-day.md) is the runbook: what to check before recording, and what to say if
+5. Bundle: one 1019 kB chunk (**303 kB gzipped**), 14 precache entries for offline start. Route-splitting was
+   tried and reverted — it moved 7 kB because Firebase dominates, and the measurement is recorded.
+6. [docs/demo-day.md](docs/demo-day.md) is the runbook: what to check before recording, and what to say if
    something fails on camera.
 
 The on-device half needs Chrome with the Gemini Nano weights installed; without them the app says
