@@ -284,4 +284,38 @@ describe("runInference — model fallback chain", () => {
     expect(error.code).toBe("MODEL_NOT_FOUND");
     expect(tried).toEqual(["a", "b", "c"]);
   });
+
+  it("surfaces the actionable capacity error, not a 404 from the last model tried", async () => {
+    // Real shape of a bad day: the primary is rate-limited, the next is retired, and the
+    // chain ends on a model id that does not exist. Reporting the 404 would tell the user
+    // nothing they can act on.
+    mockedBuildModel.mockImplementation(({ cloudModel }) =>
+      ({
+        generateContentStream: async () => {
+          if (cloudModel === "rate-limited") {
+            throw new Error("429 You exceeded your current quota, please check your plan and billing details.");
+          }
+          throw new Error(
+            "models/gone is not found for API version v1main, or is not supported for generateContent",
+          );
+        },
+      }) as never,
+    );
+
+    const error = await expectAppError(
+      runInference(
+        baseInput({
+          taskKind: "exam",
+          policy: {
+            ...DEFAULT_POLICY,
+            cloudModel: "rate-limited",
+            fallbackCloudModels: ["gone", "missing"],
+          },
+        }),
+      ),
+    );
+
+    expect(error.code).toBe("QUOTA_EXCEEDED");
+    expect(error.message).toMatch(/quota/i);
+  });
 });

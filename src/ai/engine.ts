@@ -176,6 +176,11 @@ export async function runInference(input: RunInferenceInput): Promise<RunInferen
       (model, index, all) => all.indexOf(model) === index,
     );
     let lastError: unknown = null;
+    // "Quota exceeded" and "high demand" are things a user can act on (wait, retry,
+    // raise the quota). "Model not found" for the last id in the chain is a red herring
+    // when earlier attempts were actually capacity-limited, so keep the actionable one.
+    let capacityError: unknown = null;
+
     for (const model of chain) {
       try {
         const attempt = await execute(mode, model);
@@ -185,13 +190,15 @@ export async function runInference(input: RunInferenceInput): Promise<RunInferen
         // Quota is usually metered per model, so a saturated primary does not mean
         // the whole chain is exhausted — try the next one before giving up.
         if (code === "MODEL_OVERLOADED" || code === "MODEL_NOT_FOUND" || code === "QUOTA_EXCEEDED") {
+          if (code !== "MODEL_NOT_FOUND" && capacityError === null) capacityError = error;
           lastError = error;
           continue;
         }
         throw error;
       }
     }
-    throw lastError ?? new Error("No cloud model in the chain could answer.");
+
+    throw capacityError ?? lastError ?? new Error("No cloud model in the chain could answer.");
   };
 
   const startedAt = performance.now();

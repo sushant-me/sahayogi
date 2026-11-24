@@ -7,6 +7,8 @@
 
 import { useState } from "react";
 
+import { runInference } from "../ai/engine";
+import type { AppError } from "../ai/errors";
 import { runSelfCheck, type CheckResult } from "../lib/selfCheck";
 import { useApp } from "../state/appContext";
 import { BentoCard } from "./bento";
@@ -19,9 +21,47 @@ const TONE: Record<CheckResult["status"], { chip: "device" | "warn" | "danger"; 
 };
 
 export function SelfCheck() {
-  const { online, deviceAvailability, policySource } = useApp();
+  const { online, deviceAvailability, policySource, policy, userMode } = useApp();
   const [results, setResults] = useState<CheckResult[] | null>(null);
   const [running, setRunning] = useState(false);
+  const [probe, setProbe] = useState<CheckResult | null>(null);
+  const [probing, setProbing] = useState(false);
+
+  /**
+   * The checks above prove the wiring without spending quota — which also means they can
+   * pass while inference itself is rate-limited. This optional probe answers that question
+   * directly, and is labelled so nobody triggers it by accident.
+   */
+  async function testModel() {
+    setProbing(true);
+    setProbe(null);
+    try {
+      const result = await runInference({
+        text: "Reply with the single word: ready",
+        taskKind: "chat",
+        userMode,
+        policy,
+        availability: deviceAvailability,
+        online,
+      });
+      setProbe({
+        id: "probe",
+        label: "One real answer",
+        status: "pass",
+        detail: `answered via ${result.actual ?? "unknown"} in ${result.latencyMs} ms (${result.modelUsed ?? "on-device"})`,
+      });
+    } catch (error) {
+      const appErr = error as AppError;
+      setProbe({
+        id: "probe",
+        label: "One real answer",
+        status: "fail",
+        detail: `${appErr.code ?? "UNKNOWN"}: ${appErr.message}`.slice(0, 200),
+      });
+    } finally {
+      setProbing(false);
+    }
+  }
 
   async function run() {
     setRunning(true);
@@ -57,9 +97,29 @@ export function SelfCheck() {
         point.
       </p>
 
-      <Button variant="secondary" onClick={() => void run()} disabled={running}>
-        {running ? "Checking…" : results ? "Run again" : "Run self-check"}
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="secondary" onClick={() => void run()} disabled={running}>
+          {running ? "Checking…" : results ? "Run again" : "Run self-check"}
+        </Button>
+        <Button
+          variant="ghost"
+          onClick={() => void testModel()}
+          disabled={probing}
+          title="Sends one tiny prompt and reports what came back — this uses a little of the free quota"
+        >
+          {probing ? "Asking the model…" : "Test one answer (uses a little quota)"}
+        </Button>
+      </div>
+
+      {probe ? (
+        <p className="mt-2 flex flex-wrap items-baseline gap-2 text-[12px]">
+          <Chip tone={probe.status === "pass" ? "device" : "danger"}>
+            {probe.status === "pass" ? "pass" : "fail"}
+          </Chip>
+          <span className="font-medium text-ink">{probe.label}</span>
+          <span className="min-w-0 flex-1 break-words text-muted">{probe.detail}</span>
+        </p>
+      ) : null}
 
       {results ? (
         <ul className="mt-3 divide-y divide-line/60 border-t border-line/60">
