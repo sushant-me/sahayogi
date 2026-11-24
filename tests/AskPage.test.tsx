@@ -98,12 +98,16 @@ describe("AskPage", () => {
     fireEvent.change(screen.getByLabelText("Your question"), { target: { value: "State Ohm's law" } });
     fireEvent.click(screen.getByRole("button", { name: "Send" }));
 
-    await waitFor(() => expect(screen.getByText(/Ohm's law says V = IR\./)).toBeTruthy());
+    // Wait for the badge itself, not just the text: the streaming placeholder also
+    // renders the answer text, so waiting on text alone can land during the
+    // streaming→final transition (this failed once in CI and not locally).
+    await waitFor(() => expect(document.querySelector(".badge")).toBeTruthy());
+    const badge = document.querySelector(".badge") as HTMLElement;
 
     // the badge reports the SDK's source, not the page's intent
-    const badge = document.querySelector(".badge");
-    expect(badge?.textContent).toContain("cloud");
-    expect(badge?.textContent).toContain("1234 ms");
+    expect(badge.textContent).toContain("cloud");
+    expect(badge.textContent).toContain("1234 ms");
+    expect(screen.getByText(/Ohm's law says V = IR\./)).toBeTruthy();
 
     expect(mockedLog).toHaveBeenCalledWith(
       expect.objectContaining({
