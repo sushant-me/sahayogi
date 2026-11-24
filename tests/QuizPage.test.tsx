@@ -32,6 +32,7 @@ vi.mock("../src/state/routingLog", () => ({
 
 import { runInference } from "../src/ai/engine";
 import { QuizPage } from "../src/pages/QuizPage";
+import { logRoute } from "../src/state/routingLog";
 
 const mockedRun = vi.mocked(runInference);
 
@@ -168,5 +169,36 @@ describe("QuizPage failure recovery", () => {
     mockedRun.mockResolvedValue(result('[{"front":"Q","back":"A"}]'));
     fireEvent.click(screen.getByRole("button", { name: "Try again" }));
     await waitFor(() => expect(mockedRun).toHaveBeenCalledTimes(2));
+  });
+});
+
+describe("QuizPage when the free tier is rate-limiting", () => {
+  it("retries by itself, then shows the failure card and records one attempt", async () => {
+    vi.useFakeTimers();
+    const mockedRun = vi.mocked(runInference);
+    const mockedLog = vi.mocked(logRoute);
+    mockedRun.mockReset();
+    mockedLog.mockClear();
+    mockedRun.mockRejectedValue({ code: "QUOTA_EXCEEDED", message: "quota", hint: "wait" });
+
+    render(<QuizPage />);
+    fireEvent.change(screen.getByLabelText(/study notes/i), {
+      target: { value: "Photosynthesis converts light energy into chemical energy in chloroplasts." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /flashcards/i }));
+
+    await vi.waitFor(() => expect(screen.getByText(/retrying automatically \(attempt 2 of 3\)/i)).toBeTruthy());
+    expect(mockedRun).toHaveBeenCalledTimes(1);
+
+    // the whole budget: 20s then 45s
+    await vi.advanceTimersByTimeAsync(70_000);
+    expect(mockedRun).toHaveBeenCalledTimes(3);
+
+    // one recorded attempt, and the failure card with a way out
+    expect(mockedLog).toHaveBeenCalledTimes(1);
+    expect(mockedLog.mock.calls[0][0]).toMatchObject({ actual: null, error: "QUOTA_EXCEEDED" });
+    await vi.waitFor(() => expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy());
+
+    vi.useRealTimers();
   });
 });

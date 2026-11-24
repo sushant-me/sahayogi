@@ -7,9 +7,10 @@
  * actually happened.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { runInference } from "../ai/engine";
+import { CAPACITY_RETRY_DELAYS_MS, isCapacityCode } from "../ai/retry";
 import type { AppError } from "../ai/errors";
 import { detectScript } from "../ai/language";
 import { parseFlashcards, splitMarkdownSections } from "../ai/parse";
@@ -83,9 +84,25 @@ export function QuizPage() {
     };
   }, [notes, userMode, deviceAvailability, online, policy]);
 
-  async function run(task: TaskKind) {
+  /**
+   * Same budget as the Ask page: the free tier slots in requests at ~20 s, so a throttled
+   * generation gets 20 s and then 45 s before the failure card is shown. Visible, cancellable,
+   * and bounded — an exam that silently retried forever would be worse than one that failed.
+   */
+  const retryCountRef = useRef(0);
+  const retryTimerRef = useRef<number | null>(null);
+  const [retrying, setRetrying] = useState<{ attempt: number; task: TaskKind } | null>(null);
+
+  const cancelRetry = useCallback(() => {
+    if (retryTimerRef.current !== null) window.clearTimeout(retryTimerRef.current);
+    retryTimerRef.current = null;
+    setRetrying(null);
+  }, []);
+
+  async function run(task: TaskKind, isRetry = false) {
     const text = notes.trim();
     if (!text || busy) return;
+    if (!isRetry) retryCountRef.current = 0;
     setBusy(task);
     setElapsedMs(0);
     setFailure(null);
@@ -146,6 +163,38 @@ export function QuizPage() {
       });
     } catch (error) {
       const appErr = error as AppError;
+      const capacity = isCapacityCode(appErr.code);
+
+      if (capacity && retryCountRef.current < CAPACITY_RETRY_DELAYS_MS.length) {
+        const delay = CAPACITY_RETRY_DELAYS_MS[retryCountRef.current];
+        retryCountRef.current += 1;
+        setBusy(null);
+        setRetrying({ attempt: retryCountRef.current, task });
+        pushToast({
+          kind: "info",
+          message: `The free tier is rate-limiting requests. Retrying in ${Math.round(delay / 1000)}s…`,
+          hint: "You can cancel; your notes are kept.",
+        });
+        retryTimerRef.current = window.setTimeout(() => {
+          retryTimerRef.current = null;
+          setRetrying(null);
+          void run(task, true);
+        }, delay);
+        return;
+      }
+
+      // A failed attempt is a decision too (the Ask page records it for the same reason).
+      logRoute({
+        taskKind: task,
+        chars: text.length,
+        predictedMode: (task === "flashcards" ? expected.flashcards : expected.exam).inferenceMode,
+        reason: (task === "flashcards" ? expected.flashcards : expected.exam).reason,
+        actual: null,
+        latencyMs: 0,
+        degraded: false,
+        error: appErr.code ?? "UNKNOWN",
+      });
+
       // A toast disappears; a study tool should keep the failure and the way out on
       // screen, exactly like the Ask page does.
       setFailure({ message: appErr.message || "Generation failed.", hint: appErr.hint, task });
@@ -256,6 +305,22 @@ export function QuizPage() {
           <RouteBadge predictedMode={meta.mode} actual={meta.actual} latencyMs={meta.latencyMs} />
           <span className="text-[11.5px] text-muted">{meta.reason}</span>
         </div>
+      ) : null}
+
+      {retrying ? (
+        <BentoCard span="lg:col-span-12 sm:col-span-6" label="Rate limited" accent="warn">
+          <p className="text-[12.5px] leading-relaxed text-ink">
+            The free tier is rate-limiting requests — retrying automatically (attempt {retrying.attempt + 1} of 3).
+          </p>
+          <p className="mt-1 text-[11.5px] leading-relaxed text-muted">
+            Your notes are kept. This is the shared free-tier limit, not a fault in the app.
+          </p>
+          <div className="mt-3">
+            <Button variant="ghost" onClick={cancelRetry}>
+              Cancel
+            </Button>
+          </div>
+        </BentoCard>
       ) : null}
 
       {failure ? (

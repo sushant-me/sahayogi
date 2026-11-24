@@ -10,6 +10,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { runInference } from "../ai/engine";
+import { CAPACITY_RETRY_DELAYS_MS, isCapacityCode } from "../ai/retry";
 import type { AppError } from "../ai/errors";
 import { detectScript } from "../ai/language";
 import type { InferenceMode, InferenceSource, RouteReason } from "../ai/policy";
@@ -259,7 +260,7 @@ export function AskPage() {
       });
     } catch (error) {
       const appErr = error as AppError;
-      const capacity = appErr.code === "QUOTA_EXCEEDED" || appErr.code === "MODEL_OVERLOADED";
+      const capacity = isCapacityCode(appErr.code);
 
       /**
        * Free-tier quota is metered per minute and per model, and measurement showed the tier
@@ -267,15 +268,14 @@ export function AskPage() {
        * 20 s later often lands before the next window opens, so there are two: at 20 s and 45 s.
        * Bounded, visible, cancellable — a retry budget, not a loop.
        */
-      const RETRY_DELAYS_MS = [20_000, 45_000];
-      if (capacity && autoRetryCountRef.current < RETRY_DELAYS_MS.length) {
+      if (capacity && autoRetryCountRef.current < CAPACITY_RETRY_DELAYS_MS.length) {
         const attempt = autoRetryCountRef.current;
         autoRetryCountRef.current = attempt + 1;
         setAutoRetryCount(attempt + 1);
         setSending(false);
         setStreamingText("");
         setAutoRetrying(true);
-        const waitSeconds = Math.round(RETRY_DELAYS_MS[attempt] / 1000);
+        const waitSeconds = Math.round(CAPACITY_RETRY_DELAYS_MS[attempt] / 1000);
         pushToast({
           kind: "info",
           message: `The free tier is rate-limiting requests. Retrying in ${waitSeconds}s…`,
@@ -285,7 +285,7 @@ export function AskPage() {
           autoRetryRef.current = null;
           setAutoRetrying(false);
           void send(text, true);
-        }, RETRY_DELAYS_MS[attempt]);
+        }, CAPACITY_RETRY_DELAYS_MS[attempt]);
         return;
       }
 
