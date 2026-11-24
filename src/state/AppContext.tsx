@@ -6,16 +6,7 @@
  * Components stay dumb and the router stays pure.
  */
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { getDeviceAvailability, preflightDeviceModel } from "../ai/models";
 import type { DeviceAvailability, RoutingPolicy, UserMode } from "../ai/policy";
@@ -27,43 +18,13 @@ import {
   fetchRoutingPolicyRaw,
   isFirebaseConfigured,
 } from "../firebase/config";
+import {
+  AppContext,
+  type AppContextValue,
+  type PreflightState,
+  type Toast,
+} from "./appContext";
 
-export interface Toast {
-  id: string;
-  kind: "error" | "info" | "success";
-  message: string;
-  hint?: string;
-}
-
-export interface PreflightState {
-  running: boolean;
-  /** 0..1 while downloading, null when idle. */
-  progress: number | null;
-  message: string | null;
-}
-
-interface AppContextValue {
-  configured: boolean;
-  diagnostics: typeof configDiagnostics;
-  uid: string | null;
-  authError: string | null;
-  online: boolean;
-  deviceAvailability: DeviceAvailability;
-  deviceChecking: boolean;
-  preflight: PreflightState;
-  policy: RoutingPolicy;
-  policySource: string;
-  policyIssues: string[];
-  userMode: UserMode;
-  setUserMode: (mode: UserMode) => void;
-  refreshDevice: () => Promise<void>;
-  startPreflight: () => Promise<void>;
-  toasts: Toast[];
-  pushToast: (toast: Omit<Toast, "id">) => void;
-  dismissToast: (id: string) => void;
-}
-
-const AppContext = createContext<AppContextValue | null>(null);
 
 const USER_MODE_KEY = "sahayogi.userMode";
 
@@ -82,7 +43,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [authError, setAuthError] = useState<string | null>(null);
   const [online, setOnline] = useState<boolean>(() => navigator.onLine !== false);
   const [deviceAvailability, setDeviceAvailability] = useState<DeviceAvailability>("unsupported");
-  const [deviceChecking, setDeviceChecking] = useState(true);
+  const [deviceChecking, setDeviceChecking] = useState(isFirebaseConfigured);
   const [preflight, setPreflight] = useState<PreflightState>({
     running: false,
     progress: null,
@@ -125,10 +86,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!isFirebaseConfigured) {
-      setDeviceChecking(false);
-      return;
-    }
+    if (!isFirebaseConfigured) return;
     let cancelled = false;
 
     void (async () => {
@@ -156,8 +114,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [pushToast]);
 
   useEffect(() => {
-    void refreshDevice();
-  }, [refreshDevice]);
+    let cancelled = false;
+    void (async () => {
+      const availability = await getDeviceAvailability();
+      if (cancelled) return;
+      setDeviceAvailability(availability);
+      setDeviceChecking(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const goOnline = () => setOnline(true);
@@ -238,10 +205,4 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
-}
-
-export function useApp(): AppContextValue {
-  const ctx = useContext(AppContext);
-  if (!ctx) throw new Error("useApp must be used inside AppProvider");
-  return ctx;
 }

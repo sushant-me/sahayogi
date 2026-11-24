@@ -7,7 +7,8 @@ import { HistoryPage } from "./pages/HistoryPage";
 import { QuizPage } from "./pages/QuizPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { SetupPage } from "./pages/SetupPage";
-import { AppProvider, useApp } from "./state/AppContext";
+import { AppProvider } from "./state/AppContext";
+import { useApp } from "./state/appContext";
 
 function Screens() {
   const { configured } = useApp();

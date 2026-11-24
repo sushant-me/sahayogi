@@ -10,7 +10,7 @@ import { DevicePreflight } from "../components/DevicePreflight";
 import { ModeToggle } from "../components/ModeToggle";
 import { TransparencyPanel } from "../components/TransparencyPanel";
 import { Button, Chip, Panel, SectionHeading, Stat } from "../components/ui";
-import { useApp } from "../state/AppContext";
+import { useApp } from "../state/appContext";
 import { clearRoutingLog, summariseLog, useRoutingLog } from "../state/routingLog";
 
 export function SettingsPage() {

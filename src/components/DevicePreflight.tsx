@@ -6,7 +6,7 @@
  * page load. That single constraint is why this component exists.
  */
 
-import { useApp } from "../state/AppContext";
+import { useApp } from "../state/appContext";
 import { Button, Chip, Panel } from "./ui";
 
 const AVAILABILITY_COPY: Record<string, { label: string; tone: "neutral" | "device" | "warn" | "cloud" | "danger"; body: string }> = {

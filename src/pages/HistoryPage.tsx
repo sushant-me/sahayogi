@@ -11,7 +11,7 @@ import { useEffect, useMemo, useState } from "react";
 import { RouteBadge } from "../components/RouteBadge";
 import { Button, Chip, EmptyState, Panel, SectionHeading } from "../components/ui";
 import type { InferenceMode } from "../ai/policy";
-import { useApp } from "../state/AppContext";
+import { useApp } from "../state/appContext";
 import {
   removeChat,
   watchChats,
@@ -52,10 +52,7 @@ export function HistoryPage() {
   }, [uid]);
 
   useEffect(() => {
-    if (!uid || !selected) {
-      setMessages([]);
-      return;
-    }
+    if (!uid || !selected) return;
     const unsubscribe = watchMessages(
       uid,
       selected,
@@ -111,7 +108,10 @@ export function HistoryPage() {
                 <li key={chat.id}>
                   <button
                     type="button"
-                    onClick={() => setSelected(chat.id)}
+                    onClick={() => {
+                      setMessages([]);
+                      setSelected(chat.id);
+                    }}
                     className={`w-full rounded-lg border px-3 py-2 text-left transition-colors ${
                       active ? "border-accent/40 bg-accent/[0.07]" : "border-line bg-panel-2/40 hover:border-line/80"
                     }`}

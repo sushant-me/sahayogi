@@ -1,6 +1,6 @@
 /** Toast stack. Errors carry an actionable hint; hints never get truncated away. */
 
-import { useApp } from "../state/AppContext";
+import { useApp } from "../state/appContext";
 
 const TONE = {
   error: "border-danger/40 bg-danger/[0.08] text-danger",

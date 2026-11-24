@@ -20,7 +20,7 @@ import { ModeToggle } from "../components/ModeToggle";
 import { OfflineBanner } from "../components/OfflineBanner";
 import { RouteBadge } from "../components/RouteBadge";
 import { Button, Chip, EmptyState, Panel, SectionHeading } from "../components/ui";
-import { useApp } from "../state/AppContext";
+import { useApp } from "../state/appContext";
 import { logRoute } from "../state/routingLog";
 import { appendMessage, createChat } from "../store/chatStore";
 

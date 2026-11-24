@@ -18,7 +18,7 @@ import { decideRoute } from "../ai/policy";
 import type { Flashcard } from "../ai/prompts";
 import { RouteBadge } from "../components/RouteBadge";
 import { Button, Chip, EmptyState, Panel, SectionHeading } from "../components/ui";
-import { useApp } from "../state/AppContext";
+import { useApp } from "../state/appContext";
 import { logRoute } from "../state/routingLog";
 
 const SAMPLE = `Photosynthesis is the process by which green plants convert light energy into chemical energy. It happens in two stages. The light-dependent reactions occur in the thylakoid membranes, where photosystem II splits water, releasing oxygen and producing ATP and NADPH. The light-independent reactions, or Calvin cycle, occur in the stroma, where carbon dioxide is fixed by RuBisCO into three-carbon compounds that are reduced using ATP and NADPH to form glucose. Limiting factors include light intensity, carbon dioxide concentration and temperature.`;

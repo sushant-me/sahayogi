@@ -7,7 +7,7 @@
  */
 
 import { Panel, SectionHeading } from "../components/ui";
-import { useApp } from "../state/AppContext";
+import { useApp } from "../state/appContext";
 
 const ENV_BLOCK = `# .env.local  (never commit this file)
 VITE_FIREBASE_API_KEY=...

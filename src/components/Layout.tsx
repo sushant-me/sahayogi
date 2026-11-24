@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 
-import { useApp } from "../state/AppContext";
+import { useApp } from "../state/appContext";
 import { Chip } from "./ui";
 
 export type PageId = "ask" | "quiz" | "history" | "settings";
