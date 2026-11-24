@@ -8,6 +8,7 @@
 
 import { DevicePreflight } from "../components/DevicePreflight";
 import { ModeToggle } from "../components/ModeToggle";
+import { SelfCheck } from "../components/SelfCheck";
 import { TransparencyPanel } from "../components/TransparencyPanel";
 import { BentoCard, BentoGrid, BentoMetric, BentoRow } from "../components/bento";
 import { Button, Chip } from "../components/ui";
@@ -60,6 +61,8 @@ export function SettingsPage() {
           </Button>
         </div>
       </BentoCard>
+
+      <SelfCheck />
 
       <div className="sm:col-span-6 lg:col-span-5">
         <DevicePreflight />

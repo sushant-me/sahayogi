@@ -1,0 +1,79 @@
+/**
+ * The self-check card: one button, and the wiring proves itself in the browser.
+ *
+ * Results are shown as they are — a warn is still a warn, and a failure keeps its raw
+ * message rather than being smoothed into something friendlier.
+ */
+
+import { useState } from "react";
+
+import { runSelfCheck, type CheckResult } from "../lib/selfCheck";
+import { useApp } from "../state/appContext";
+import { BentoCard } from "./bento";
+import { Button, Chip } from "./ui";
+
+const TONE: Record<CheckResult["status"], { chip: "device" | "warn" | "danger"; word: string }> = {
+  pass: { chip: "device", word: "pass" },
+  warn: { chip: "warn", word: "warn" },
+  fail: { chip: "danger", word: "fail" },
+};
+
+export function SelfCheck() {
+  const { online, deviceAvailability, policySource } = useApp();
+  const [results, setResults] = useState<CheckResult[] | null>(null);
+  const [running, setRunning] = useState(false);
+
+  async function run() {
+    setRunning(true);
+    try {
+      setResults(await runSelfCheck({ online, deviceAvailability, policySource }));
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  const failed = results?.filter((entry) => entry.status === "fail").length ?? 0;
+  const warned = results?.filter((entry) => entry.status === "warn").length ?? 0;
+
+  return (
+    <BentoCard
+      span="lg:col-span-12 sm:col-span-6"
+      label="Self-check"
+      accent={results ? (failed ? "danger" : warned ? "warn" : "device") : "neutral"}
+      meta={
+        results ? (
+          <Chip tone={failed ? "danger" : warned ? "warn" : "device"}>
+            {failed ? `${failed} failed` : warned ? `${warned} warning${warned > 1 ? "s" : ""}` : "all clear"}
+          </Chip>
+        ) : (
+          <span>not run</span>
+        )
+      }
+    >
+      <p className="mb-3 max-w-3xl text-[12px] leading-relaxed text-muted">
+        Runs the same readiness checks the project verifies from the terminal, but here in your browser and against
+        the real SDK: config, identity, App Check attestation, a Firestore write → read → delete round-trip, Remote
+        Config, and the on-device model. It deliberately does not call the model — that would spend quota to prove a
+        point.
+      </p>
+
+      <Button variant="secondary" onClick={() => void run()} disabled={running}>
+        {running ? "Checking…" : results ? "Run again" : "Run self-check"}
+      </Button>
+
+      {results ? (
+        <ul className="mt-3 divide-y divide-line/60 border-t border-line/60">
+          {results.map((result) => (
+            <li key={result.id} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 py-1.5">
+              <Chip tone={TONE[result.status].chip}>{TONE[result.status].word}</Chip>
+              <span className="w-36 shrink-0 text-[12px] font-medium text-ink">{result.label}</span>
+              <span className="min-w-0 flex-1 break-words text-[11.5px] leading-relaxed text-muted">
+                {result.detail}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </BentoCard>
+  );
+}

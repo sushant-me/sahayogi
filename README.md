@@ -12,6 +12,9 @@ Built for **#BuildHybridAI 2026** (Devpost). Web platform (Chrome), Firebase AI 
 
 ### For judges — a two-minute path
 
+0. **Settings → Run self-check** proves the wiring in your browser: config, anonymous auth, App Check
+   attestation, a Firestore write → read → delete round-trip, Remote Config, and the on-device model.
+   It never calls the model, so it costs no quota.
 1. Open **https://hackthon-dcdf7.web.app** in Chrome and click **Light question**. The answer carries a badge
    naming the source the SDK reported, plus its latency.
 2. **Settings → Transparency**: the ledger of every decision — the mode the policy requested, the source the
@@ -155,7 +158,7 @@ src/
   state/routingLog.ts     prediction-vs-reality ledger
   components/             RouteBadge, TransparencyPanel, DevicePreflight, ErrorBoundary, …
   pages/                  Ask, Quiz, History, Settings, Setup
-tests/                    160 tests (pure routing, orchestration, UI, persistence)
+tests/                    173 tests (pure routing, orchestration, UI, persistence)
 scripts/preflight.mjs     live readiness check against the project (npm run preflight)
 docs/architecture.md      sequence + decision diagrams (Mermaid, renders on GitHub)
 docs/verification.md      what was measured, how, and what is still unverified
@@ -312,7 +315,7 @@ What is *not* covered by automated tests, and is verified manually: a real cloud
 
 **New project**, built during the #BuildHybridAI submission period (sprint opened 15 Nov 2026; submission 30 Nov 2026). Not a pre-existing app.
 
-Done: hybrid engine, routing policy + 160 tests (policy, parsing, orchestration, error taxonomy, ledger, screens), four screens, Firestore persistence with offline queue, PWA offline cold start, App Check wiring, Remote Config policy, rules, deploy config, submission pack and docs.
+Done: hybrid engine, routing policy + 173 tests (policy, parsing, orchestration, error taxonomy, ledger, screens), four screens, Firestore persistence with offline queue, PWA offline cold start, App Check wiring, Remote Config policy, rules, deploy config, submission pack and docs.
 Recorded on: Chrome 158 on Windows/macOS (on-device) — see §6 for why the Linux box could not serve the weights.
 
 ### Known limitations

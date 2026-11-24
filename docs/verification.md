@@ -6,7 +6,7 @@ anyone can repeat them. Claims that could **not** be verified yet are listed at 
 Run the whole automated gate in one command:
 
 ```bash
-npm run verify      # lint → types → 160 tests → production build
+npm run verify      # lint → types → 173 tests → production build
 ```
 
 ---
@@ -33,6 +33,8 @@ npm run verify      # lint → types → 160 tests → production build
 | Every page has a heading and landmarks | DOM inspection | `h1` "Ask — Sahayogi hybrid study assistant"; `main`, labelled `nav`, `footer`, skip link and an `aria-live` conversation log all present |
 | Load performance on the deployed build | CDP against the live URL, 1440x940: navigation timing + layout-shift observer | TTFB **444 ms**, DOMContentLoaded **1.44 s**, load **1.45 s**, cumulative layout shift **0**, JS heap **16 MB** at rest. Largest Contentful Paint was not captured reliably, so it is not claimed. |
 | Reported latency matches what the user waits | same run: sampled the DOM every 100 ms while a real answer streamed | first model text at **26.3 s**, answer complete at **26.5 s**, badge `cloud 26310 ms`, ledger row `26310 ms` — the badge is within ~200 ms of the wall clock, so it is not a flattering number |
+| The in-app self-check passes on the deployed build | clicked Settings → Run self-check on the live site | **pass**: config (`project hackthon-dcdf7`), network, anonymous auth (`uid ax7mtNV0…`), App Check (`attestation token acquired`), Firestore (`write → read → delete round-trip ok`), Remote Config (`routing_policy fetched`); **warn** for the on-device model, because the weights are not installed here — the card says so instead of passing. Captured at `docs/screenshots/self-check.png` |
+| The self-check's failure branches are pinned | `tests/selfCheck.test.ts` with config, App Check and Firestore mocked | ten cases: all-healthy, nothing-configured (skips + names the missing key), auth failure with its message, App Check rejection, write-but-nothing-read-back, raw Firestore permission error kept verbatim, defaults-only policy, unsupported device, and offline |
 | A typed question survives a reload | typed into the composer on the deployed app, reloaded the page without sending | the composer still held the text. Quiz notes use the same draft mechanism, so pasted lecture notes are not lost either |
 | A red suite cannot reach Hosting | `npm run deploy` runs `npm run verify` first | verified against the deployed build: a failing test now stops the deploy rather than publishing it (this was found the hard way — a piped `grep` had swallowed the exit code) |
 | The device-availability mapping is pinned by tests | mocked Chrome's `LanguageModel` global (the same API the SDK reads) in `tests/deviceAvailability.test.ts` | `unsupported` with no global and with a global lacking `availability()`; `available`/`downloadable`/`downloading` passed through; unexpected verdict → `unavailable`; rejected probe → `unavailable`; a probe that never settles → `unavailable` via the timeout guard. This is the branch that cannot be exercised live here, so its logic is pinned instead of assumed |
