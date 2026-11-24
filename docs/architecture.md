@@ -70,7 +70,17 @@ Note `prefer_*` versus `only_*`: the SDK falls back to the other path on `prefer
 `only_*`. That is why an explicit user choice uses `only_*` — an override that silently doesn't happen
 would make the badge meaningless.
 
-## 3. Data model
+## 3. Persistence modes
+
+```
+uid present   → Firestore  users/{uid}/chats/…   owner-only rules, offline queue
+uid absent    → local      browser storage       header says "local only · not synced"
+```
+
+The facade (`src/store/persistence.ts`) is what the screens talk to, so a missing identity degrades
+storage instead of breaking the app.
+
+## 4. Data model
 
 ```
 users/{uid}/chats/{chatId}
@@ -88,7 +98,7 @@ settings/{uid}
 "route" field would make a fallback indistinguishable from a deliberate cloud call, and would delete the
 only evidence that the router can be wrong.
 
-## 4. Failure modes and what the user sees
+## 5. Failure modes and what the user sees
 
 | Failure | Detection | UI |
 |---|---|---|

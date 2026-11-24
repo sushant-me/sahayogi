@@ -122,7 +122,8 @@ src/
   state/routingLog.ts     prediction-vs-reality ledger
   components/             RouteBadge, TransparencyPanel, DevicePreflight, ErrorBoundary, …
   pages/                  Ask, Quiz, History, Settings, Setup
-tests/                    107 unit + component tests (pure routing, orchestration, QuizPage UI)
+tests/                    129 tests (pure routing, orchestration, UI, persistence)
+scripts/preflight.mjs     live readiness check against the project (npm run preflight)
 docs/architecture.md      sequence + decision diagrams (Mermaid, renders on GitHub)
 docs/verification.md      what was measured, how, and what is still unverified
 docs/browser-support.md   measured capability matrix (incl. Brave, Chromium)
@@ -161,7 +162,15 @@ Documentation: [architecture](docs/architecture.md) · [verification log](docs/v
 }
 ```
 
-### 5.3 Local run
+### 5.3 Check the wiring before you demo
+
+```bash
+npm run preflight
+```
+
+Probes the real project (not the config): whether AI Logic answers, whether anonymous auth works, how App Check is set up, and what must be checked by hand. Every failure prints the exact console step that fixes it. Exit code 1 means "not demo-ready".
+
+### 5.4 Local run
 
 ```bash
 npm install
@@ -171,7 +180,7 @@ npm run dev                    # http://localhost:5173
 
 With no config the app renders a setup screen listing the exact missing variables — it never fabricates answers.
 
-### 5.4 Deploy
+### 5.5 Deploy
 
 ```bash
 npx firebase-tools login
@@ -216,6 +225,7 @@ This is documented rather than hidden: the app's failure mode when the weights a
 ```bash
 npm test        # 107 tests, ~1s, no network, no browser, no Firebase project
 npm run verify  # lint + types + tests + production build, in that order
+npm run preflight # probe the real project: AI Logic, auth, App Check, on-device
 npm run build   # tsc -b + vite build
 ```
 
@@ -243,6 +253,7 @@ What is *not* covered by automated tests, and is verified manually: a real cloud
   (14 entries, ~1.2 MB), so a cold start with no network still boots the interface. Verified by cutting the
   network at the protocol level (CDP `Network.emulateNetworkConditions` with `offline: true`) and reloading:
   the app rendered a complete screen. Firebase traffic is cross-origin and is **never** cached by the worker.
+- **History degrades honestly.** With a signed-in uid it uses Firestore (owner-only rules, offline queue). With no uid — the provider is disabled or Identity Platform is not enabled — it falls back to this browser's storage and the header says **local only · not synced**. Nothing pretends to be in the cloud.
 - **Firestore persistent local cache** means history renders with no network, and writes made offline are durably queued. Each queued message is stored with `syncedOffline: true` so the UI can show "written offline, queued to sync".
 - Rules are owner-only with a default-deny catch-all: `request.auth.uid == uid`.
 - Anonymous auth is used so there is no sign-up friction; the uid is real, so the rules are real.

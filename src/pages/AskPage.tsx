@@ -22,7 +22,7 @@ import { RouteBadge } from "../components/RouteBadge";
 import { Button, Chip, EmptyState, Panel, SectionHeading } from "../components/ui";
 import { useApp } from "../state/appContext";
 import { logRoute } from "../state/routingLog";
-import { appendMessage, createChat } from "../store/chatStore";
+import { getPersistence } from "../store/persistence";
 
 interface Turn {
   id: string;
@@ -94,20 +94,20 @@ export function AskPage() {
     bottomRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
   }, [turns, streamingText]);
 
-  async function persist(chatIdOwner: string | null, userText: string, result: {
+  async function persist(userText: string, result: {
     text: string;
     predictedMode: InferenceMode;
     actual: InferenceSource | null;
     reason: RouteReason;
     latencyMs: number;
   }) {
-    if (!chatIdOwner) return;
+    const store = getPersistence(uid);
     try {
       if (!chatIdRef.current) {
-        chatIdRef.current = await createChat(chatIdOwner, userText.slice(0, 60));
+        chatIdRef.current = await store.createChat(userText.slice(0, 60));
       }
       const chatId = chatIdRef.current;
-      await appendMessage(chatIdOwner, chatId, {
+      await store.appendMessage(chatId, {
         role: "user",
         text: userText,
         actualSource: null,
@@ -115,7 +115,7 @@ export function AskPage() {
         reason: result.reason,
         latencyMs: null,
       });
-      await appendMessage(chatIdOwner, chatId, {
+      await store.appendMessage(chatId, {
         role: "model",
         text: result.text,
         actualSource: result.actual,
@@ -187,7 +187,7 @@ export function AskPage() {
         degraded: result.predicted.degraded,
       });
 
-      await persist(uid, text, {
+      await persist(text, {
         text: result.text,
         predictedMode: result.predicted.inferenceMode,
         actual: result.actual,

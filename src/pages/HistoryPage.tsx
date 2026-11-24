@@ -12,13 +12,8 @@ import { RouteBadge } from "../components/RouteBadge";
 import { Button, Chip, EmptyState, Panel, SectionHeading } from "../components/ui";
 import type { InferenceMode } from "../ai/policy";
 import { useApp } from "../state/appContext";
-import {
-  removeChat,
-  watchChats,
-  watchMessages,
-  type StoredChat,
-  type StoredMessage,
-} from "../store/chatStore";
+import type { StoredChat, StoredMessage } from "../store/chatStore";
+import { getPersistence, type PersistenceMode } from "../store/persistence";
 
 function formatWhen(ms: number): string {
   if (!ms) return "";
@@ -38,10 +33,11 @@ export function HistoryPage() {
   const [messages, setMessages] = useState<StoredMessage[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  const store = useMemo(() => getPersistence(uid), [uid]);
+  const mode: PersistenceMode = store.mode;
+
   useEffect(() => {
-    if (!uid) return;
-    const unsubscribe = watchChats(
-      uid,
+    const unsubscribe = store.watchChats(
       (next) => {
         setChats(next);
         setSelected((current) => current ?? next[0]?.id ?? null);
@@ -49,25 +45,23 @@ export function HistoryPage() {
       (message) => setError(message),
     );
     return unsubscribe;
-  }, [uid]);
+  }, [store]);
 
   useEffect(() => {
-    if (!uid || !selected) return;
-    const unsubscribe = watchMessages(
-      uid,
+    if (!selected) return;
+    const unsubscribe = store.watchMessages(
       selected,
-      setMessages,
+      (next) => setMessages(next),
       (message) => setError(message),
     );
     return unsubscribe;
-  }, [uid, selected]);
+  }, [store, selected]);
 
   const activeChat = useMemo(() => chats.find((chat) => chat.id === selected) ?? null, [chats, selected]);
 
   async function handleDelete(chatId: string) {
-    if (!uid) return;
     try {
-      await removeChat(uid, chatId);
+      await store.removeChat(chatId);
       setSelected((current) => (current === chatId ? null : current));
     } catch (deleteError) {
       pushToast({
@@ -78,22 +72,24 @@ export function HistoryPage() {
     }
   }
 
-  if (!uid) {
-    return (
-      <EmptyState
-        title="History needs an identity"
-        body="Anonymous sign-in has not completed, so there is nothing to read yet. Check Settings for the Firebase connection state."
-      />
-    );
-  }
-
   return (
     <div className="grid gap-4 lg:grid-cols-[300px_1fr]">
       <Panel className="p-4">
         <SectionHeading
           title="Chats"
-          hint={online ? "Synced with Firestore." : "Read from the on-device cache; writes are queued."}
-          right={<Chip tone={online ? "neutral" : "warn"}>{chats.length}</Chip>}
+          hint={
+            mode === "local"
+              ? "Stored in this browser only — sign-in is unavailable, so history is not synced."
+              : online
+                ? "Synced with Firestore."
+                : "Read from the on-device cache; writes are queued."
+          }
+          right={
+            <div className="flex items-center gap-1.5">
+              <Chip tone={mode === "local" ? "warn" : "device"}>{mode === "local" ? "local only" : "synced"}</Chip>
+              <Chip tone={online ? "neutral" : "warn"}>{chats.length}</Chip>
+            </div>
+          }
         />
 
         {chats.length === 0 ? (
