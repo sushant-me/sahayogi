@@ -6,7 +6,7 @@ anyone can repeat them. Claims that could **not** be verified yet are listed at 
 Run the whole automated gate in one command:
 
 ```bash
-npm run verify      # lint → types → 102 tests → production build
+npm run verify      # lint → types → 107 tests → production build
 ```
 
 ---
@@ -23,6 +23,7 @@ npm run verify      # lint → types → 102 tests → production build
 | Failure taxonomy maps real error shapes | `npm test` (17 cases over `classifyError`) | pass |
 | The ledger export is self-describing and keeps disagreements | `npm test` (8 cases) | pass |
 | No unused code or type holes | `tsc -b`, `oxlint src` | 0 errors, 0 warnings |
+| The Quiz screen renders cards, prose fallback and exam sections | `npm test` (`QuizPage.test.tsx`, jsdom, 5 cases) | pass |
 | The app builds and precaches | `vite build` | 14 precache entries, 1.19 MB |
 
 Two real defects were found by these tests rather than by review, and fixed:

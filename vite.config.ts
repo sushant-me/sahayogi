@@ -52,6 +52,6 @@ export default defineConfig({
     // The routing policy, language detector and parsers are pure, so the suite
     // runs without a DOM or a Firebase project.
     environment: "node",
-    include: ["tests/**/*.test.ts"],
+    include: ["tests/**/*.test.{ts,tsx}"],
   },
 });

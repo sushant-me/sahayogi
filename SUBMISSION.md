@@ -50,7 +50,7 @@ the reason shown* ("this language is cloud-only"), rather than a mystery failure
 
 React 19 + TypeScript + Vite + Tailwind, deployed on Firebase Hosting. The routing policy is a pure
 function (`src/ai/policy.ts`) with no Firebase, DOM or React imports, so the routing table is executed
-by tests rather than described in prose — 102 unit tests run with no project credentials, including the orchestration layer with only the model factory mocked.
+by tests rather than described in prose — 107 unit tests run with no project credentials, including the orchestration layer with only the model factory mocked.
 
 The hybrid layer uses the Firebase AI Logic **hybrid inference SDK** directly. One model object carries
 both paths:
@@ -127,7 +127,7 @@ final.inferenceSource;   // "on_device" | "in_cloud" — reported by the SDK, no
   side, and disagreement is surfaced.
 - **Offline is real**, not decorative: a service worker precaches the shell (verified by reloading with
   the network cut at the protocol level) and Firestore queues writes made offline.
-- The routing table is **tested** — 102 unit tests, no credentials required: every branch of the decision
+- The routing table is **tested** — 107 unit tests, no credentials required: every branch of the decision
   table, the download/offline refusals, error mapping, and the edge that a prompt exactly at the threshold
   stays on-device.
 - A failure taxonomy where **every error code has a UI affordance**; there is no silent `catch`.

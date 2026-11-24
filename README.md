@@ -122,7 +122,7 @@ src/
   state/routingLog.ts     prediction-vs-reality ledger
   components/             RouteBadge, TransparencyPanel, DevicePreflight, ErrorBoundary, …
   pages/                  Ask, Quiz, History, Settings, Setup
-tests/                    102 unit tests over the pure layer and orchestration
+tests/                    107 unit + component tests (pure routing, orchestration, QuizPage UI)
 docs/architecture.md      sequence + decision diagrams (Mermaid, renders on GitHub)
 docs/verification.md      what was measured, how, and what is still unverified
 docs/browser-support.md   measured capability matrix (incl. Brave, Chromium)
@@ -214,7 +214,7 @@ This is documented rather than hidden: the app's failure mode when the weights a
 ## 7. Tests
 
 ```bash
-npm test        # 102 tests, ~1s, no network, no browser, no Firebase project
+npm test        # 107 tests, ~1s, no network, no browser, no Firebase project
 npm run verify  # lint + types + tests + production build, in that order
 npm run build   # tsc -b + vite build
 ```
@@ -228,6 +228,7 @@ The suite covers the parts that can be wrong in ways users feel:
 - **`badgeForMode` / `badgeForPreview`** — agreement, fallback, reverse disagreement, and the distinction between a prediction and an observation (8 cases).
 - **`summariseLog` / `exportRoutingLogJSON`** — ledger aggregates, latency averaging that ignores rows with no timing, and a self-describing export that keeps disagreements visible (8 cases).
 - **`runInference`** — the orchestration layer, with only `models.ts` mocked: routing handoff to the SDK per task, Devanagari → cloud, refusals that happen *before* an SDK call (offline with no device, offline while pinned to cloud, pinned device versus unreadable script), token ordering, empty-answer handling, and App Check/quota error mapping with the route reason preserved (13 cases).
+- **`QuizPage`** — rendered in jsdom with only `useApp` and the engine mocked: flashcards appear and reveal on click, prose instead of JSON shows the raw answer, exam markdown splits into sections, failures stop the busy state, and both actions stay disabled until there are notes (5 cases).
 - **`classifyError` / `offlineError`** — the failure taxonomy, including DOMException names like `NotSupportedError`, hyphenated gRPC codes, and a distinct message for "you pinned the cloud while offline" (17 cases).
 
 What is *not* covered by automated tests, and is verified manually: a real cloud call through App Check, and a real on-device call. Both are listed in the app's own Settings page under "How to verify this yourself".
@@ -265,7 +266,7 @@ What is *not* covered by automated tests, and is verified manually: a real cloud
 
 **New project**, built during the #BuildHybridAI submission period (sprint opened 15 Nov 2026; submission 30 Nov 2026). Not a pre-existing app.
 
-Done: hybrid engine, routing policy + 102 tests (policy, parsing, orchestration, error taxonomy, ledger), four screens, Firestore persistence with offline queue, PWA offline cold start, App Check wiring, Remote Config policy, rules, deploy config, submission pack and docs.
+Done: hybrid engine, routing policy + 107 tests (policy, parsing, orchestration, error taxonomy, ledger), four screens, Firestore persistence with offline queue, PWA offline cold start, App Check wiring, Remote Config policy, rules, deploy config, submission pack and docs.
 Recorded on: Chrome 158 on Windows/macOS (on-device) — see §6 for why the Linux box could not serve the weights.
 
 ### Known limitations
