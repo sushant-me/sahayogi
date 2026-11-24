@@ -1,6 +1,6 @@
 /** App shell: brand, navigation, and the live device/connectivity status. */
 
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 import { useApp } from "../state/appContext";
 import { Chip } from "./ui";
@@ -42,6 +42,23 @@ export function Layout({
 }) {
   const { online, deviceAvailability, deviceChecking, policySource } = useApp();
   const device = DEVICE_LABEL[deviceAvailability] ?? DEVICE_LABEL.unsupported;
+  const headingRef = useRef<HTMLHeadingElement | null>(null);
+  const label = NAV.find((entry) => entry.id === page)?.label ?? "Sahayogi";
+
+  // A single-page app that silently swaps the view leaves assistive tech with no
+  // announcement. Move focus to the page heading and update the tab title, the same way a
+  // real navigation would — but only after the first render, so the initial load keeps the
+  // browser's own focus behaviour.
+  const firstRender = useRef(true);
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      document.title = `${label} — Sahayogi hybrid study assistant`;
+      return;
+    }
+    document.title = `${label} — Sahayogi hybrid study assistant`;
+    headingRef.current?.focus();
+  }, [label]);
 
   return (
     <div className="min-h-screen bg-bg text-ink">
@@ -105,8 +122,8 @@ export function Layout({
           visual design labels each tile instead of shouting a page title, so the
           heading is present for assistive tech and visually hidden.
         */}
-        <h1 className="sr-only">
-          {(NAV.find((entry) => entry.id === page)?.label ?? "Sahayogi") + " — Sahayogi hybrid study assistant"}
+        <h1 ref={headingRef} tabIndex={-1} className="sr-only focus:outline-none">
+          {label + " — Sahayogi hybrid study assistant"}
         </h1>
         {children}
       </main>

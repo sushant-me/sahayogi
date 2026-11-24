@@ -118,6 +118,7 @@ const AUDIT = `(() => {
     unlabeledFields,
     overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     lang: document.documentElement.getAttribute("lang"),
+    title: document.title,
   };
 })()`;
 
@@ -152,6 +153,8 @@ try {
         result.overflow > 0 ? `horizontal overflow ${result.overflow}px` : null,
         result.lang ? null : "no <html lang>",
       ].filter(Boolean);
+      const titleOk = result.title.startsWith(section);
+      if (!titleOk) problems.push(`title is "${result.title}"`);
       if (problems.length) failures += 1;
       console.log(`  ${section.padEnd(9)} ${problems.length ? "FAIL  " + problems.join(" · ") : "ok"}`);
     }
