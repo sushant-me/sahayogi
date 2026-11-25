@@ -51,17 +51,18 @@ export function ChatMessage({
 }: ChatMessageProps) {  if (role === "user") {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[85%] rounded-2xl rounded-br-md border border-line bg-panel-2 px-4 py-2.5">
-          <p className="whitespace-pre-wrap text-[13.5px] leading-relaxed text-ink">{text}</p>
+        <div className="max-w-[78%] rounded-2xl rounded-br-sm bg-panel-2 px-4 py-2.5">
+          <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-ink/90">{text}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex justify-start">
-      <div className="group w-full max-w-[92%] rounded-2xl rounded-bl-md border border-line bg-panel px-4 py-3">
-        <div className="mb-2 flex flex-wrap items-center gap-2">
+    <div className="flex justify-start animate-message-in">
+      {/* No bubble: the answer is the page, not a card inside it. */}
+      <div className="group w-full max-w-2xl py-1">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
           <RouteBadge
             predictedMode={predictedMode}
             actual={actual}
@@ -77,7 +78,7 @@ export function ChatMessage({
           {streaming ? <span className="text-[11px] text-accent">streaming…</span> : null}
         </div>
         {statusSuffix ? (
-          <div className="flex items-baseline gap-1.5">
+          <div className="flex flex-wrap items-baseline gap-1.5">
             <AnswerText text={text} />
             <span aria-hidden="true" className="text-[11px] tabular-nums text-muted">
               {statusSuffix}

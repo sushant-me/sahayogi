@@ -92,8 +92,30 @@ export function TransparencyPanel() {
     <section className="panel p-5">
       <SectionHeading
         title="Transparency — how routing works"
-        hint="Every prompt is a decision. This is the decision this app made, and the source the Firebase AI Logic SDK reported afterwards. Prediction and reality are recorded separately, so a fallback is visible rather than hidden."
+        hint="Every prompt is a decision. Prediction and the SDK's own report are recorded separately, so a fallback is visible rather than hidden."
       />
+
+      {/* Documentation belongs on the page that is *for* reading, behind a control — not
+          printed under the place where people are writing. */}
+      <details className="group mb-4 rounded-lg border border-line bg-panel-2/40 px-3 py-2">
+        <summary className="cursor-pointer list-none text-[12px] font-medium text-ink/90 marker:content-none">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="text-muted transition-transform group-open:rotate-90" aria-hidden="true">▸</span>
+            How routing works
+          </span>
+        </summary>
+        <div className="mt-2 space-y-2 text-[12px] leading-relaxed text-muted">
+          <p>
+            Short English prompts stay on the device once the model is installed. Long or heavy work prefers the
+            cloud. Devanagari is sent to the cloud deliberately, because the on-device model does not read it.
+          </p>
+          <p>
+            <span className="text-device">⚡ on this device</span> never leaves the machine and costs nothing.{" "}
+            <span className="text-cloud">☁️ in the cloud</span> is more capable and needs a connection. Every answer
+            records which path actually ran — the badge shows the SDK's own report, not the plan.
+          </p>
+        </div>
+      </details>
 
       {log.length === 0 ? (
         <EmptyState

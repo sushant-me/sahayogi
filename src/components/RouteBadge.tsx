@@ -47,7 +47,12 @@ export function RouteBadge({
         : "cloud";
 
   return (
-    <span className={`badge badge-${tone}`} title={model.title}>
+    <span
+      // A result flips in: the prediction was dashed and muted, the outcome lands in its own
+      // semantic colour. 300ms, and prefers-reduced-motion collapses it to nothing.
+      className={`badge badge-${tone}${isPreview ? "" : " animate-badge-flip"}`}
+      title={model.title}
+    >
       <span aria-hidden="true">{GLYPHS[model.glyph]}</span>
       <span className="font-medium">{model.label}</span>
       {isPreview ? <span className="text-[10.5px] uppercase tracking-wide opacity-70">predicted</span> : null}

@@ -21,6 +21,9 @@ import { OfflineBanner } from "../components/OfflineBanner";
 import { RouteBadge } from "../components/RouteBadge";
 import { BentoCard, BentoGrid, BentoMetric, BentoRow } from "../components/bento";
 import { Button, Chip } from "../components/ui";
+import { FileText, Globe, PencilLine, type LucideIcon } from "lucide-react";
+
+import { LatencyBars } from "../components/LatencyBars";
 import { useApp } from "../state/appContext";
 import { logRoute, summariseLog, useRoutingLog } from "../state/routingLog";
 import { clearDraft, useDraft } from "../state/useDraft";
@@ -38,14 +41,32 @@ interface Turn {
   failed?: boolean;
 }
 
-const EXAMPLES: Array<{ label: string; text: string }> = [
-  { label: "Light question", text: "Explain Ohm's law in two sentences with the formula." },
+const EXAMPLES: Array<{
+  label: string;
+  text: string;
+  hint: string;
+  icon: LucideIcon;
+  tone: "device" | "cloud";
+}> = [
+  {
+    label: "Light question",
+    text: "Explain Ohm's law in two sentences with the formula.",
+    hint: "Stays on this device",
+    icon: PencilLine,
+    tone: "device",
+  },
   {
     label: "नेपाली प्रश्न",
     text: "किर्कहफको नियम सरल भाषामा बुझाउनुहोस् र एउटा उदाहरण दिनुहोस्।",
+    hint: "Cloud — Devanagari isn't read on-device",
+    icon: Globe,
+    tone: "cloud",
   },
   {
     label: "Long notes",
+    hint: "Heavier work goes to the cloud",
+    icon: FileText,
+    tone: "cloud",
     text: `Summarise these study notes for revision.
 Thevenin's theorem states that any linear electrical network with voltage and current sources and only resistances can be replaced at terminals A-B by an equivalent voltage source Vth in series connection with an equivalent resistance Rth. The equivalent voltage Vth is the voltage obtained at terminals A-B of the network with terminals A-B open circuited. The equivalent resistance Rth is the resistance that the circuit has measured between terminals A-B when all independent voltage sources are shorted and all independent current sources are open circuited. The theorem is especially useful for analysing power systems and other circuits where the load is variable while the rest of the network stays fixed. It applies only to linear networks; circuits with non-linear elements such as diodes cannot be reduced this way. Superposition is used to derive it: the response of a linear circuit to several sources equals the sum of the responses to each source acting alone. Norton's theorem is the dual result. Maximum power transfer occurs when the load resistance equals the Thevenin resistance.`,
   },
@@ -361,56 +382,41 @@ export function AskPage() {
             aria-live="polite"
             aria-relevant="additions" aria-label="Conversation">
               {turns.length === 0 && !sending ? (
-                <div className="grid h-full place-items-center py-12">
-                  <div className="max-w-md text-center">
-                    <p className="text-[15px] font-medium tracking-tight text-ink">Nothing asked yet</p>
-                    <p className="mx-auto mt-1.5 max-w-md text-[12.5px] leading-relaxed text-muted">
-                      Ask anything you are revising. Each answer is badged with where it <em>actually</em> ran — read
-                      from the SDK afterwards, not from what the app intended.
+                <div className="grid h-full place-items-center px-2 py-10">
+                  <div className="w-full max-w-2xl">
+                    <h2 className="text-center font-display text-[30px] font-bold leading-tight tracking-tight text-ink">
+                      Ask anything.
+                    </h2>
+                    <p className="mt-2 text-center text-[13px] text-muted">
+                      Short questions stay on this device · heavy ones go to the cloud · every answer says which.
                     </p>
-                    <div className="mt-3 flex items-center justify-center gap-4 text-[11.5px]">
-                      <span className="flex items-center gap-1.5 text-muted">
-                        <span aria-hidden="true">⚡</span> on this device
-                      </span>
-                      <span className="flex items-center gap-1.5 text-muted">
-                        <span aria-hidden="true">☁️</span> in the cloud
-                      </span>
-                      <span className="text-muted">+ latency</span>
+                    <div className="mt-7 grid gap-2.5 sm:grid-cols-3">
+                      {EXAMPLES.map((example) => {
+                        const Icon = example.icon;
+                        return (
+                          <button
+                            key={example.label}
+                            type="button"
+                            onClick={() => void send(example.text)}
+                            className="group/card flex items-start gap-2.5 rounded-xl border border-line bg-panel/60 p-3 text-left transition-colors hover:border-device/40 hover:bg-panel-2/60"
+                          >
+                            <Icon
+                              aria-hidden="true"
+                              size={16}
+                              className={`mt-0.5 shrink-0 ${example.tone === "cloud" ? "text-cloud" : "text-device"}`}
+                            />
+                            <span className="min-w-0">
+                              <span className="block text-[12.5px] font-medium text-ink">{example.label}</span>
+                              <span className="mt-0.5 block text-[11px] leading-snug text-muted">
+                                {example.hint}
+                              </span>
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
-                    <div className="mt-4 flex flex-wrap justify-center gap-1.5">
-                      {EXAMPLES.map((example) => (
-                        <Button key={example.label} variant="secondary" onClick={() => void send(example.text)}>
-                          {example.label}
-                        </Button>
-                      ))}
-                    </div>
-                    <p className="mx-auto mt-3 max-w-md text-[11px] leading-relaxed text-muted">
-                      Try “Long notes”: it is deliberately long, so the router sends it to the cloud while “Light
-                      question” stays on-device once the model is installed.
-                    </p>
-                    {/*
-                      The target user is a Nepali student, and the router sends Devanagari to the cloud. Saying
-                      so up front — in Nepali — turns a surprise ("why is my question leaving the device?")
-                      into information. It is the same reason the answer badge shows afterwards.
-                    */}
-                    <div className="mx-auto mt-4 max-w-md rounded-xl border border-line/70 bg-panel-2/40 px-3 py-2 text-left">
-                      <p lang="ne" className="text-[12px] leading-relaxed text-ink">
-                        नेपालीमा सोध्न सकिन्छ — देवनागरी प्रश्न क्लाउडमा जान्छ, किनभने यस यन्त्रको मोडेलले देवनागरी
-                        पढ्दैन।
-                      </p>
-                      <p className="mt-1 text-[10.5px] leading-relaxed text-muted">
-                        Nepali works, but it goes to the cloud: the on-device model does not read Devanagari. The
-                        router says so rather than failing silently.
-                      </p>
-                    </div>
-                    {/*
-                      Judges arrive from a public link, often on a shared free tier. Saying so before they
-                      ask turns a slow answer into an expected one — and the alternative, saying nothing,
-                      makes a throttled window look like a broken app.
-                    */}
-                    <p className="mx-auto mt-3 max-w-md text-[11px] leading-relaxed text-muted">
-                      Public demo on a shared free tier: a cloud answer can take up to a minute, and the app
-                      retries by itself before it gives up. The on-device path needs no quota at all.
+                    <p className="mt-5 text-center text-[11px] leading-relaxed text-muted/80">
+                      Nepali is welcome — it routes to the cloud · the shared free tier can take up to a minute
                     </p>
                   </div>
                 </div>
@@ -488,7 +494,7 @@ export function AskPage() {
                   {preview.degraded ? <Chip tone="warn">reduced quality</Chip> : null}
                 </div>
               ) : null}
-              <div className="flex items-end gap-2">
+              <div className="composer flex items-end gap-2 p-2">
                 <textarea
                   value={input}
                   onChange={(event) => setInput(event.target.value)}
@@ -500,16 +506,20 @@ export function AskPage() {
                   }}
                   rows={2}
                   placeholder="Ask a question, or paste anything you are revising…"
-                  className="field min-h-[52px] flex-1 resize-y"
+                  className="min-h-[56px] flex-1 resize-y rounded-xl border-0 bg-transparent px-2.5 py-2 text-[14px] text-ink placeholder:text-muted/70 focus:outline-none"
                   aria-label="Your question"
                 />
-                <Button variant="primary" onClick={() => void send(input)} disabled={sending || !input.trim()}>
+                <Button
+                  variant="primary"
+                  onClick={() => void send(input)}
+                  disabled={sending || !input.trim()}
+                  className="mb-0.5 mr-0.5 h-9 px-4"
+                >
                   {sending ? "Working…" : "Send"}
                 </Button>
               </div>
-              <p className="mt-2 text-[10.5px] text-muted">
-                Enter sends · Shift+Enter adds a line · ⌘/Ctrl+Enter also sends · nothing leaves this device when the
-                answer runs on-device
+              <p className="mt-2 text-center text-[10.5px] text-muted/80">
+                Enter sends · Shift+Enter adds a line · nothing leaves this device when the answer runs on-device
               </p>
             </div>
           </div>
@@ -524,7 +534,14 @@ export function AskPage() {
             meta={<Chip tone="neutral">{userMode}</Chip>}
           >
             {preview ? (
-              <div className="space-y-2">
+              <div
+                key={`${preview.inferenceMode}-${preview.reason}`}
+                className={`animate-preview-pulse space-y-2 rounded-lg ${
+                  preview.inferenceMode === "prefer_in_cloud" || preview.inferenceMode === "only_in_cloud"
+                    ? "text-cloud"
+                    : "text-device"
+                }`}
+              >
                 <RouteBadge predictedMode={preview.inferenceMode} actual={null} variant="preview" />
                 <p className="text-[12px] leading-relaxed text-muted">{preview.explanation}</p>
                 <div className="pt-1">
@@ -577,25 +594,17 @@ export function AskPage() {
                 <BentoMetric value={summary.cloud} unit="cloud" tone="text-cloud" />
               </div>
             </div>
+            <div className="mt-3 border-t border-line/60 pt-3">
+              <LatencyBars rows={routingLog} />
+            </div>
             <div className="mt-2 border-t border-line/60 pt-1">
               <BentoRow k="prediction missed">{summary.disagreements}</BentoRow>
-          <BentoRow k="failed attempts">{summary.failed}</BentoRow>
-              <BentoRow k="avg latency">{summary.avgLatency !== null ? `${summary.avgLatency} ms` : "—"}</BentoRow>
+              <BentoRow k="failed attempts">{summary.failed}</BentoRow>
             </div>
           </BentoCard>
         </div>
       </BentoGrid>
 
-      {/* ── full-width strip ─────────────────────────────────────────── */}
-      <BentoGrid>
-        <BentoCard span="lg:col-span-12 sm:col-span-6" label="How this page decides" accent="neutral">
-          <p className="max-w-4xl text-[12.5px] leading-relaxed text-muted">
-            Short English prompts stay on-device once the model is installed. Long or heavy ones prefer the cloud.
-            Devanagari is routed to the cloud deliberately, because the on-device model does not read it. Every answer
-            records which path actually ran, and the badge shows the SDK's own report rather than the plan.
-          </p>
-        </BentoCard>
-      </BentoGrid>
     </div>
   );
 }

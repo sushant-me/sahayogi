@@ -63,7 +63,7 @@ function renderInline(text: string, keyPrefix: string): ReactNode[] {
       return (
         <code
           key={`${keyPrefix}-c${index}`}
-          className="rounded bg-panel-2 px-1 py-0.5 font-mono text-[12px] text-ink"
+          className="rounded bg-panel-2 px-1.5 py-0.5 font-mono text-[14px] text-ink"
         >
           {part.slice(1, -1)}
         </code>
@@ -87,7 +87,7 @@ export function AnswerText({ text }: { text: string }) {
     }
     if (block.kind === "heading") {
       nodes.push(
-        <p key={key} className="mt-2 text-[13.5px] font-semibold tracking-tight text-ink first:mt-0">
+        <p key={key} className="mt-4 text-[17px] font-semibold leading-snug tracking-tight text-ink first:mt-0">
           {renderInline(block.text, key)}
         </p>,
       );
@@ -123,5 +123,7 @@ export function AnswerText({ text }: { text: string }) {
     );
   }
 
-  return <div className="space-y-1 text-[13.5px] leading-relaxed">{nodes}</div>;
+  // Body copy at 17px with generous leading: this is the thing the user came for, and it
+  // used to be the smallest text on the screen.
+  return <div className="space-y-2.5 text-[17px] leading-[1.65] text-ink/95">{nodes}</div>;
 }

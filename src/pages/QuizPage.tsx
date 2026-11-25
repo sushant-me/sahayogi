@@ -447,12 +447,9 @@ export function QuizPage() {
       ) : null}
 
       {!cards && !exam && !rawFallback && busy === null ? (
-        <BentoCard span="lg:col-span-12 sm:col-span-6" label="Nothing generated yet">
-          <p className="text-[12px] leading-relaxed text-muted">
-            Paste notes above. Flashcards usually run on-device; the exam usually goes to the cloud. The badge after
-            generation tells you which actually happened.
-          </p>
-        </BentoCard>
+        <p className="px-1 text-[11.5px] text-muted">
+          Flashcards usually run on the device; the exam prefers the cloud. Both report where they actually ran.
+        </p>
       ) : null}
     </div>
   );
