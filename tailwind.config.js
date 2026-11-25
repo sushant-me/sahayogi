@@ -4,20 +4,29 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: "#0b0d10",
-        panel: "#10141a",
-        "panel-2": "#151b23",
-        line: "#232b36",
-        ink: "#e7eaf0",
-        muted: "#8b96a5",
-        accent: "#6ea8ff",
-        device: "#3fb950",
-        cloud: "#58a6ff",
-        warn: "#d29922",
-        danger: "#f85149",
+        // One step lifted from the previous near-black, so cards separate by tone rather
+        // than by drawn lines.
+        bg: "#0f0f16",
+        panel: "#161620",
+        "panel-2": "#1d1d29",
+        // Barely-there separation: borders are a hint, not a grid.
+        line: "rgba(255,255,255,0.07)",
+        ink: "#eef0f6",
+        muted: "#9598a9",
+        accent: "#8b5cf6",
+        // Semantic system, used everywhere and only for these meanings:
+        //   device = emerald (on-device) · cloud = violet (in the cloud) · warn = amber
+        device: "#34d399",
+        "device-deep": "#10b981",
+        cloud: "#a78bfa",
+        "cloud-deep": "#8b5cf6",
+        warn: "#fbbf24",
+        danger: "#fb7185",
       },
       fontFamily: {
+        display: ["Space Grotesk", "Inter", "ui-sans-serif", "system-ui", "sans-serif"],
         sans: [
+          "Inter",
           "ui-sans-serif",
           "system-ui",
           "-apple-system",
