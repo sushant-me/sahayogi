@@ -59,9 +59,9 @@ export function BentoCard({
   return (
     <section
       className={[
-        "group relative isolate overflow-hidden rounded-2xl border bg-panel",
-        "bg-gradient-to-b from-white/[0.022] to-transparent",
-        "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_1px_3px_rgba(0,0,0,0.35)]",
+        "group relative isolate overflow-hidden rounded-xl border bg-panel",
+        "bg-gradient-to-b from-white/[0.02] to-transparent",
+        "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04),0_1px_2px_rgba(0,0,0,0.28)]",
         "transition-colors hover:border-line",
         ACCENT_RING[accent],
         ACCENT_GLOW[accent],
@@ -77,7 +77,7 @@ export function BentoCard({
           screen edge instead of moving to its own line. */}
       {label || meta ? (
         <header className={`flex flex-wrap items-start justify-between gap-3 ${flush ? "px-4 pb-2 pt-3.5" : "px-4 pt-3.5"}`}>
-          <h2 className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted">{label}</h2>
+          <h2 className="text-[12px] font-medium text-muted/90">{label}</h2>
           {meta ? <div className="min-w-0 text-[11px] text-muted">{meta}</div> : null}
         </header>
       ) : null}
@@ -97,7 +97,7 @@ export function BentoMetric({
   tone?: string;
 }) {
   return (
-    <p className={`flex items-baseline gap-1 text-[26px] font-semibold leading-none tabular-nums tracking-tight ${tone}`}>
+    <p className={`flex items-baseline gap-1 font-display text-[30px] font-bold leading-none tabular-nums tracking-tight ${tone}`}>
       {value}
       {unit ? <span className="text-[12px] font-medium text-muted">{unit}</span> : null}
     </p>

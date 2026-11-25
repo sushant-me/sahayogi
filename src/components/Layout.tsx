@@ -3,7 +3,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
 
 import { useApp } from "../state/appContext";
-import { Chip } from "./ui";
+import { Logo } from "./Logo";
 
 export type PageId = "ask" | "quiz" | "history" | "settings";
 
@@ -71,14 +71,9 @@ export function Layout({
       <header className="sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
           <div className="flex items-center gap-2.5">
-            <span
-              aria-hidden="true"
-              className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-br from-accent to-device text-[13px] font-bold text-bg"
-            >
-              S
-            </span>
+            <Logo />
             <div className="leading-tight">
-              <p className="text-[14px] font-semibold tracking-tight">Sahayogi</p>
+              <p className="font-display text-[15px] font-bold tracking-tight">Sahayogi</p>
               <p className="text-[11px] text-muted">hybrid study assistant</p>
             </div>
           </div>
@@ -102,16 +97,17 @@ export function Layout({
             })}
           </nav>
 
-          <div className="ml-auto flex items-center gap-2">
-            <Chip tone={online ? "neutral" : "warn"} title={online ? "Connected" : "No network"}>
-              {online ? "online" : "offline"}
-            </Chip>
-            <Chip tone={device.tone} title={`On-device capability: ${deviceAvailability}`}>
-              {deviceChecking ? "checking" : device.text}
-            </Chip>
-            <Chip tone="neutral" title="Where the routing policy came from">
-              policy: {policySource}
-            </Chip>
+          <div className="ml-auto">
+            <span
+              className="inline-flex items-center gap-2 rounded-full border border-line bg-panel px-3 py-1.5 text-[11.5px] text-ink"
+              title={`Connection: ${online ? "online" : "offline"} · On-device: ${device.text} · Routing policy: ${policySource}`}
+            >
+              <span
+                aria-hidden="true"
+                className={`h-1.5 w-1.5 rounded-full ${online ? "bg-device shadow-[0_0_8px] shadow-device/60" : "bg-warn"}`}
+              />
+              {deviceChecking ? "checking" : online ? "online" : "offline"}
+            </span>
           </div>
         </div>
       </header>
