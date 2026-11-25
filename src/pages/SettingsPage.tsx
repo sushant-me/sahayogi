@@ -9,6 +9,7 @@
 import { DevicePreflight } from "../components/DevicePreflight";
 import { ModeToggle } from "../components/ModeToggle";
 import { SelfCheck } from "../components/SelfCheck";
+import { LatencyBars } from "../components/LatencyBars";
 import { TransparencyPanel } from "../components/TransparencyPanel";
 import { BentoCard, BentoGrid, BentoMetric, BentoRow } from "../components/bento";
 import { Button, Chip } from "../components/ui";
@@ -51,7 +52,9 @@ export function SettingsPage() {
         <div className="grid grid-cols-2 gap-x-5">
           <BentoRow k="prediction missed">{summary.disagreements}</BentoRow>
           <BentoRow k="failed attempts">{summary.failed}</BentoRow>
-          <BentoRow k="avg latency">{summary.avgLatency !== null ? `${summary.avgLatency} ms` : "—"}</BentoRow>
+        </div>
+        <div className="mt-3 border-t border-line/60 pt-3">
+          <LatencyBars rows={log} />
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
           <Button variant="secondary" onClick={() => downloadRoutingLog(log)} disabled={log.length === 0}>

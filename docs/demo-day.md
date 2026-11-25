@@ -69,7 +69,7 @@ Full shot list and read-aloud narration: [docs/recording.md](recording.md). Shor
 | Ask in Nepali (Devanagari) | ☁️ cloud, reason `unsupported language` — the router is honest about a limit rather than failing |
 | Paste long notes, summarise | over the threshold → cloud, deliberately |
 | Settings → Transparency | predicted vs actual per row; **Export routing log (JSON)** |
-| Remote Config: change `heavyThresholdChars`, reload | routing changes with no deploy (`policy: remote`) |
+| Remote Config: change `heavyThresholdChars`, reload | routing changes with no deploy (Settings shows `source: remote`) |
 | Quiz → Flashcards, then the exam | flashcards stay local when the model is installed; the exam goes to the cloud |
 | `src/ai/engine.ts` on screen | one `getGenerativeModel` call, both paths, `inferenceSource` read back |
 

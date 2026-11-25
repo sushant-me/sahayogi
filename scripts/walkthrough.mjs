@@ -105,10 +105,11 @@ try {
   // ── Beat 1: the hook, and the legend the narration refers to ────────────────────────────
   const legend = await evaluate(`(() => {
     const t = document.body.innerText;
-    return { device: /on this device/.test(t), cloud: /in the cloud/.test(t), latency: /\\+ latency/.test(t),
-      nothingAsked: /Nothing asked yet/.test(t) };
+    return { device: /on this device|Stays on this device/i.test(t), cloud: /in the cloud|goes to the cloud/i.test(t),
+      latency: /ms|no data/i.test(t),
+      nothingAsked: /Ask anything[.]/.test(t) };
   })()`);
-  beat("hook: empty state with the ⚡/☁️ legend",
+  beat("hook: hero empty state with both example routes",
     Boolean(legend?.device && legend?.cloud && legend?.latency && legend?.nothingAsked),
     legend ? `device=${legend.device} cloud=${legend.cloud} latency=${legend.latency}` : "no empty state");
 
@@ -122,7 +123,7 @@ try {
   await sleep(900);
   const preview = await evaluate(`(() => {
     const t = document.body.innerText;
-    const m = t.match(/ROUTE PREVIEW[\\s\\S]{0,200}/);
+    const m = t.match(/Route preview[\\s\\S]{0,200}/);
     return { predicted: /PREDICTED/.test(t), text: m ? m[0].replace(/\\s+/g, " ").slice(0, 120) : "" };
   })()`);
   beat("preview: decision shown before sending", Boolean(preview?.predicted), preview?.text ?? "no preview");
@@ -137,7 +138,7 @@ try {
   await sleep(900);
   const nepali = await evaluate(`(() => {
     const t = document.body.innerText;
-    return { preview: /PREDICTED/.test(t), mentionsCloud: /cloud/i.test((t.match(/ROUTE PREVIEW[\\s\\S]{0,200}/) || [""])[0]) };
+    return { preview: /PREDICTED/.test(t), mentionsCloud: /cloud/i.test((t.match(/Route preview[\\s\\S]{0,200}/) || [""])[0]) };
   })()`);
   beat("nepali: still previews, and previews the cloud",
     Boolean(nepali?.preview && nepali?.mentionsCloud),
@@ -148,9 +149,9 @@ try {
   await sleep(2800);
   const ledger = await evaluate(`(() => {
     const t = document.body.innerText;
-    return { heading: /ROUTING LEDGER/.test(t), failed: /failed attempts/.test(t),
+    return { heading: /Routing ledger/i.test(t), failed: /failed attempts/i.test(t),
       exportBtn: [...document.querySelectorAll("button")].some((b) => /Export routing log/.test(b.innerText)),
-      transparency: /Transparency — how routing works/.test(t) };
+      transparency: /Transparency — how routing works/i.test(t) };
   })()`);
   beat("ledger: heading, failures counted, export present",
     Boolean(ledger?.heading && ledger?.failed && ledger?.exportBtn && ledger?.transparency),

@@ -24,7 +24,7 @@ https://hackthon-dcdf7.web.app.
 | Claim | How to check it | Observed |
 |---|---|---|
 | The router is a pure function, executed by tests | `npm test` | 194 tests, no credentials, no network, no browser |
-| It reads its policy from Remote Config, with a built-in fallback | Settings → source chip | `policy: remote` after a publish; `source: default` when the fetch fails, with the reason listed |
+| It reads its policy from Remote Config, with a built-in fallback | Settings → Routing policy card | `source: remote` after a publish; `source: default` when the fetch fails, with the reason listed |
 | Changing policy needs no deploy | edit `routing_policy` in the console, reload | threshold 800 → 60 took effect on reload: `source: remote`, parsed value 60 ([screenshot](screenshots/policy-remote.png)) |
 | The reason a prompt routes the way it does is shown *before* sending | type in the composer and watch the route preview | "The on-device model is not downloaded yet, so this runs in the cloud…" — no request made |
 | Devanagari goes to the cloud deliberately, and says so | type Nepali, read the preview | with weights installed: *this language is cloud-only*. The first screen also explains this **in Nepali**, before you ask |
