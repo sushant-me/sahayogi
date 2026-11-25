@@ -2,6 +2,9 @@
 
 9 documents besides this index, and you probably need one of them. This page says which.
 
+**Prefer pictures?** [Sahayogi-report.pdf](Sahayogi-report.pdf) is a 27-page illustrated report: every
+screen, every state, each with a "look for" note, plus the evidence table and the honest limits.
+
 If you are **judging this submission**, read in this order and stop when you are convinced:
 
 | # | Read | It answers |

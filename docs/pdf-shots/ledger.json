@@ -1,0 +1,17 @@
+[
+  {
+    "id": "rmwvkzu3pf3os",
+    "at": 1795578360613,
+    "taskKind": "chat",
+    "chars": 31,
+    "predictedMode": "only_in_cloud",
+    "reason": "device-not-ready",
+    "actual": null,
+    "latencyMs": 0,
+    "degraded": false,
+    "agreed": true,
+    "device": null,
+    "model": null,
+    "error": "QUOTA_EXCEEDED"
+  }
+]
